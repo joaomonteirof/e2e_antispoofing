@@ -1,0 +1,146 @@
+import argparse
+import numpy as np
+import glob
+import torch
+import torch.nn.functional as F
+import os
+from kaldi_io import read_mat_scp
+import model as model_
+import scipy.io as sio
+
+def set_device(trials=10):
+	a = torch.rand(1)
+
+	for i in range(torch.cuda.device_count()):
+		for j in range(trials):
+
+			torch.cuda.set_device(i)
+			try:
+				a = a.cuda()
+				print('GPU {} selected.'.format(i))
+				return
+			except:
+				pass
+
+	print('NO GPU AVAILABLE!!!')
+	exit(1)
+
+def prep_feats(data_):
+
+	#data_ = ( data_ - data_.mean(0) ) / data_.std(0)
+
+	features = data_.T
+
+	if features.shape[1]<50:
+		mul = int(np.ceil(50/features.shape[1]))
+		features = np.tile(features, (1, mul))
+		features = features[:, :50]
+
+	return torch.from_numpy(features[np.newaxis, np.newaxis, :, :]).float()
+
+def read_trials(path):
+	with open(path, 'r') as file:
+		utt_labels = file.readlines()
+
+	utt_list, attack_type_list, label_list = [], [], []
+
+	for line in utt_labels:
+		_, utt, _, attack_type, label = line.split(' ')
+		utt_list.append(utt)
+		attack_type_list.append(attack_type)
+		label_list.append(label.strip('\n'))
+
+	return utt_list, attack_type_list, label_list
+
+if __name__ == '__main__':
+
+	parser = argparse.ArgumentParser(description='Evaluate accuracy for mcc model')
+	parser.add_argument('--path-to-data', type=str, default='./data/feats.scp', metavar='Path', help='Path to input data')
+	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
+	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
+	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
+	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec'], default='lcnn_9', help='Model arch')
+	parser.add_argument('--n-classes', type=int, default=-1, metavar='N', help='Number of classes for the mcc case (default: binary classification)')
+	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
+	args = parser.parse_args()
+	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
+
+	if args.cp_path is None:
+		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
+
+	if os.path.isfile(args.out_path):
+		os.remove(args.out_path)
+		print(args.out_path + ' Removed')
+
+	labels_dict = {'-':0, 'AA':1, 'AB':2, 'AC':3, 'BA':4, 'BB':5, 'BC':6, 'CA':7, 'CB':8, 'CC':9}
+
+	print('Cuda Mode is: {}'.format(args.cuda))
+	print('Selected model is: {}'.format(args.model))
+
+	if args.cuda:
+		set_device()
+
+	if args.model == 'lstm':
+		model = model_.cnn_lstm(nclasses=args.n_classes)
+	elif args.model == 'resnet':
+		model = model_.ResNet(nclasses=args.n_classes)
+	elif args.model == 'resnet_pca':
+		model = model_.ResNet_pca(nclasses=args.n_classes)
+	elif args.model == 'lcnn_9':
+		model = model_.lcnn_9layers(nclasses=args.n_classes)
+	elif args.model == 'lcnn_29':
+		model = model_.lcnn_29layers_v2(nclasses=args.n_classes)
+	elif args.model == 'lcnn_9_pca':
+		model = model_.lcnn_9layers_pca(nclasses=args.n_classes)
+	elif args.model == 'lcnn_29_pca':
+		model = model_.lcnn_29layers_v2_pca(nclasses=args.n_classes)
+	elif args.model == 'lcnn_9_icqspec':
+		model = model_.lcnn_9layers_icqspec(nclasses=args.n_classes)
+	elif args.model == 'lcnn_9_prodspec':
+		model = model_.lcnn_9layers_prodspec(nclasses=args.n_classes)
+
+	print('Loading model')
+
+	ckpt = torch.load(args.cp_path, map_location = lambda storage, loc: storage)
+	model.load_state_dict(ckpt['model_state'], strict=False)
+	model.eval()
+
+	print('Model loaded')
+
+	print('Loading data')
+
+	test_utts, attack_type_list, label_list = read_trials(args.trials_path)
+	data = { k:m for k,m in read_mat_scp(args.path_to_data) }
+
+	print('Data loaded')
+
+	print('Start of predictions')
+
+	correct, total = 0, 0
+
+	with torch.no_grad():
+
+		for i, utt in enumerate(test_utts):
+
+			print('Computing prediction for utterance '+ utt)
+
+			feats = prep_feats(data[utt])
+
+			try:
+				if args.cuda:
+					feats = feats.cuda()
+					model = model.cuda()
+
+			except:
+				feats = feats.cpu()
+				model = model.cpu()
+
+			pred = F.softmax(model.forward(feats), dim=1).max(1)[1].long().squeeze().item()
+
+			if pred==labels_dict[attack_type_list[i]]:
+				correct+=1
+			total+=1
+
+	print('All done!!')
+
+	print('Accuracy: {}'.format(float(correct)/total))
