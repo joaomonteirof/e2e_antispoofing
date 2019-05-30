@@ -1,8 +1,6 @@
 from __future__ import print_function
 import argparse
 import torch
-import torchvision
-import torchvision.transforms as transforms
 from train_loop import TrainLoop
 from train_loop_mcc import TrainLoop_mcc
 import torch.optim as optim
@@ -11,25 +9,7 @@ import model as model_
 import numpy as np
 from data_load import Loader, Loader_mcc
 
-def set_np_randomseed(worker_id):
-	np.random.seed(np.random.get_state()[1][0]+worker_id)
-
-def set_device(trials=10):
-	a = torch.rand(1)
-
-	for i in range(torch.cuda.device_count()):
-		for j in range(trials):
-
-			torch.cuda.set_device(i)
-			try:
-				a = a.cuda()
-				print('GPU {} selected.'.format(i))
-				return
-			except:
-				pass
-
-	print('NO GPU AVAILABLE!!!')
-	exit(1)
+from utils import *
 
 # Training settings
 parser = argparse.ArgumentParser(description='Speaker embbedings with contrastive loss')
@@ -59,7 +39,7 @@ args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
 if args.cuda:
-	set_device()
+	device = get_freer_gpu()
 
 torch.manual_seed(args.seed)
 if args.cuda:
@@ -118,7 +98,7 @@ if args.pretrained_path is not None:
 		raise
 
 if args.cuda:
-	model = model.cuda()
+	model = model.cuda(device)
 
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 
