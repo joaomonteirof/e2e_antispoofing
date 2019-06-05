@@ -53,8 +53,10 @@ if __name__ == '__main__':
 
 	data_clean = { k:m for k,m in read_mat_scp(args.path_to_data_clean) }
 	data_spoof = { k:m for k,m in read_mat_scp(args.path_to_data_spoof) }
-	data_clean[k]=m for k,m in read_mat_scp(args.path_to_more_data_clean)
-	data_spoof[k]=m for k,m in read_mat_scp(args.path_to_more_data_spoof)
+	for k,m in read_mat_scp(args.path_to_more_data_clean):
+		data_clean[k]=m
+	for k,m in read_mat_scp(args.path_to_more_data_spoof):
+		data_spoof[k]=m
 
 
 	if args.all_in_one:
