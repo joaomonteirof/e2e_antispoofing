@@ -40,6 +40,7 @@ if __name__ == '__main__':
 	parser.add_argument('--all-in-one', action='store_true', default=False, help='Dumps all data into single hdf rather than separate depending on clean/spoof')
 	parser.add_argument('--out-path', type=str, default='./', metavar='Path', help='Path to output hdf file')
 	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
+	parser.add_argument('--more-trials-path', type=str, default='./data/more_trials', metavar='Path', help='Path to trials file')
 	parser.add_argument('--prefix', type=str, default=None)
 	args = parser.parse_args()
 
@@ -82,6 +83,9 @@ if __name__ == '__main__':
 		data[k]=m
 
 	test_utts, attack_type_list, label_list = read_trials(args.trials_path)
+	more_test_utts, more_attack_type_list, more_label_list = read_trials(args.more_trials_path)
+	test_utts.extend(more_test_utts)
+	label_list.extend(more_label_list)
 
 	for i, utt in enumerate(test_utts):
 
