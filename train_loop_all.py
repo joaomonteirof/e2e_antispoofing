@@ -81,7 +81,7 @@ class TrainLoop(object):
 			self.scheduler_pa.step(self.history['valid_loss'][-1])
 			self.scheduler_mix.step(self.history['valid_loss'][-1])
 
-			print('Current LRs (LA, PA, Mixture): {}, {}, {}'.format(self.optimizer_la.param_groups[0]['lr']), self.optimizer_pa.param_groups[0]['lr']), self.optimizer_mix.param_groups[0]['lr']))
+			print('Current LRs (LA, PA, Mixture): {}, {}, {}'.format(self.optimizer_la.param_groups[0]['lr'], self.optimizer_pa.param_groups[0]['lr'], self.optimizer_mix.param_groups[0]['lr']))
 
 			self.cur_epoch += 1
 
