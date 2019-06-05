@@ -80,20 +80,12 @@ class Loader_all(Dataset):
 		self.len_2 = len(self.idxlist_2)
 		file_2.close()
 
-		file_3 = h5py.File(self.hdf5_pa, 'r')
-		len_3 = len(file_3)
-		file_3.close()
-
-		file_4 = h5py.File(self.hdf5_mix, 'r')
-		len_4 = len(file_4)
-		file_4.close()
-
 		self.open_file_la_clean = None
 		self.open_file_la_attack = None
 		self.open_file_pa = None
 		self.open_file_mix = None
 
-		print('Number of genuine, spoofing, and total LA, PA and MIX recordings: {}, {}, {}, {}, {}'.format(self.len_1, self.len_2, self.len_1+self.len_2, len_3, len_4))
+		print('Number of genuine, spoofing, and total recordings: {}, {}, {}'.format(self.len_1, self.len_2, self.len_1+self.len_2))
 
 	def __getitem__(self, index):
 

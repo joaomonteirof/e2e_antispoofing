@@ -110,7 +110,7 @@ class TrainLoop(object):
 		utterances_la = torch.cat([utterances_clean_la, utterances_attack_la],0)
 		utterances_pa = torch.cat([utterances_clean_pa, utterances_attack_pa],0)
 		utterances_mix = torch.cat([utterances_clean_mix, utterances_attack_mix],0)
-		y = torch.cat([y_clean, y_attack],0)
+		y = torch.cat([y_clean, y_attack],0).squeeze()
 
 		ridx = np.random.randint(utterances_la.size(3)//2, utterances_la.size(3))
 		utterances_la = utterances_la[:,:,:,:ridx]
@@ -120,8 +120,8 @@ class TrainLoop(object):
 		if self.cuda_mode:
 			utterances_la, utterances_pa, utterances_mix, y = utterances_la.to(self.device), utterances_pa.to(self.device), utterances_mix.to(self.device), y.to(self.device)
 
-		pred_la = self.model_la.forward(utterances_la)
-		pred_pa = self.model_pa.forward(utterances_pa)
+		pred_la = self.model_la.forward(utterances_la).squeeze()
+		pred_pa = self.model_pa.forward(utterances_pa).squeeze()
 		mixture_coef = torch.sigmoid(self.model_mix.forward(utterances_mix)).squeeze()
 
 		pred = mixture_coef*pred_la + (1.-mixture_coef)*pred_pa
@@ -147,7 +147,7 @@ class TrainLoop(object):
 			utterances_la = torch.cat([utterances_clean_la, utterances_attack_la],0)
 			utterances_pa = torch.cat([utterances_clean_pa, utterances_attack_pa],0)
 			utterances_mix = torch.cat([utterances_clean_mix, utterances_attack_mix],0)
-			y = torch.cat([y_clean, y_attack],0)
+			y = torch.cat([y_clean, y_attack],0).squeeze()
 
 			ridx = np.random.randint(utterances_la.size(3)//2, utterances_la.size(3))
 			utterances_la = utterances_la[:,:,:,:ridx]
@@ -157,8 +157,8 @@ class TrainLoop(object):
 			if self.cuda_mode:
 				utterances_la, utterances_pa, utterances_mix, y = utterances_la.to(self.device), utterances_pa.to(self.device), utterances_mix.to(self.device), y.to(self.device)
 
-			pred_la = self.model_la.forward(utterances_la)
-			pred_pa = self.model_pa.forward(utterances_pa)
+			pred_la = self.model_la.forward(utterances_la).squeeze()
+			pred_pa = self.model_pa.forward(utterances_pa).squeeze()
 			mixture_coef = torch.sigmoid(self.model_mix.forward(utterances_mix)).squeeze()
 
 			pred = mixture_coef*pred_la + (1.-mixture_coef)*pred_pa
