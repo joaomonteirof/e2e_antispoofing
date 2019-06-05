@@ -37,7 +37,6 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Train data preparation and storage in .hdf')
 	parser.add_argument('--path-to-data', type=str, default='./data/feats.scp', metavar='Path', help='Path to feats.scp')
 	parser.add_argument('--path-to-more-data', type=str, default='./more_data/feats.scp', metavar='Path', help='Path to feats.scp')
-	parser.add_argument('--path-to-more-more-data', type=str, default='./more_more_data/feats.scp', metavar='Path', help='Path to feats.scp')
 	parser.add_argument('--all-in-one', action='store_true', default=False, help='Dumps all data into single hdf rather than separate depending on clean/spoof')
 	parser.add_argument('--out-path', type=str, default='./', metavar='Path', help='Path to output hdf file')
 	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
@@ -60,11 +59,11 @@ if __name__ == '__main__':
 	else:
 
 		if args.prefix:
-			clean_ = args.out_path+args.prefix+'train_clean.hdf'
-			spoof_ = args.out_path+args.prefix+'train_attack.hdf'
+			clean_ = args.out_path+args.prefix+'valid_clean.hdf'
+			spoof_ = args.out_path+args.prefix+'valid_attack.hdf'
 		else:
-			clean_ = args.out_path+'train_clean.hdf'
-			spoof_ = args.out_path+'train_attack.hdf'
+			clean_ = args.out_path+'valid_clean.hdf'
+			spoof_ = args.out_path+'valid_attack.hdf'
 
 		if os.path.isfile(clean_):
 			os.remove(clean_)
@@ -80,8 +79,6 @@ if __name__ == '__main__':
 
 	data = { k:m for k,m in read_mat_scp(args.path_to_data) }
 	for k,m in read_mat_scp(args.path_to_more_data):
-		data[k]=m
-	for k,m in read_mat_scp(args.path_to_more_more_data):
 		data[k]=m
 
 	test_utts, attack_type_list, label_list = read_trials(args.trials_path)
