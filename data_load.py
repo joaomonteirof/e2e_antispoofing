@@ -70,12 +70,12 @@ class Loader_all(Dataset):
 		self.n_cycles = n_cycles
 		self.max_nb_frames = max_nb_frames
 
-		file_1 = h5py.File(self.hdf5_1, 'r')
+		file_1 = h5py.File(self.hdf5_la_clean, 'r')
 		self.idxlist_1 = list(file_1.keys())
 		self.len_1 = len(self.idxlist_1)
 		file_1.close()
 
-		file_2 = h5py.File(self.hdf5_2, 'r')
+		file_2 = h5py.File(self.hdf5_la_attack, 'r')
 		self.idxlist_2 = list(file_2.keys())
 		self.len_2 = len(self.idxlist_2)
 		file_2.close()
@@ -100,7 +100,7 @@ class Loader_all(Dataset):
 		utt_clean_mix = self.prep_utterance( self.open_file_mix[self.idxlist_1[index_1]][0] )
 
 		index_2 = index % self.len_2
-		utt_attack = self.prep_utterance( self.open_file_la_attack[self.idxlist_2[index_2]][0] )
+		utt_attack_la = self.prep_utterance( self.open_file_la_attack[self.idxlist_2[index_2]][0] )
 		utt_attack_pa = self.prep_utterance( self.open_file_pa[self.idxlist_2[index_2]][0] )
 		utt_attack_mix = self.prep_utterance( self.open_file_mix[self.idxlist_2[index_2]][0] )
 

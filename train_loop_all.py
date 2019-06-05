@@ -10,7 +10,7 @@ from utils import compute_eer
 
 class TrainLoop(object):
 
-	def __init__(self, model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, checkpoint_path=None, checkpoint_epoch=None, cuda=True):
+	def __init__(self, model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience, checkpoint_path=None, checkpoint_epoch=None, cuda=True):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -27,9 +27,9 @@ class TrainLoop(object):
 		self.optimizer_la = optimizer_la
 		self.optimizer_pa = optimizer_pa
 		self.optimizer_mix = optimizer_mix
-		self.scheduler_la = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_la, factor=0.5, patience=patience, verbose=True if self.verbose>0 else False, threshold=1e-4, min_lr=1e-7)
-		self.scheduler_pa = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_pa, factor=0.5, patience=patience, verbose=True if self.verbose>0 else False, threshold=1e-4, min_lr=1e-7)
-		self.scheduler_mix = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_mix, factor=0.5, patience=patience, verbose=True if self.verbose>0 else False, threshold=1e-4, min_lr=1e-7)
+		self.scheduler_la = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_la, factor=0.5, patience=patience, verbose=True, threshold=1e-4, min_lr=1e-7)
+		self.scheduler_pa = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_pa, factor=0.5, patience=patience, verbose=True, threshold=1e-4, min_lr=1e-7)
+		self.scheduler_mix = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_mix, factor=0.5, patience=patience, verbose=True, threshold=1e-4, min_lr=1e-7)
 		self.train_loader = train_loader
 		self.valid_loader = valid_loader
 		self.total_iters = 0
@@ -111,7 +111,7 @@ class TrainLoop(object):
 		utterances_mix = torch.cat([utterances_clean_mix, utterances_attack_mix],0)
 		y = torch.cat([y_clean, y_attack],0)
 
-		ridx = np.random.randint(utterances.size(3)//2, utterances.size(3))
+		ridx = np.random.randint(utterances_la.size(3)//2, utterances_la.size(3))
 		utterances_la = utterances_la[:,:,:,:ridx]
 		utterances_pa = utterances_pa[:,:,:,:ridx]
 		utterances_mix = utterances_mix[:,:,:,:ridx]
@@ -148,7 +148,7 @@ class TrainLoop(object):
 			utterances_mix = torch.cat([utterances_clean_mix, utterances_attack_mix],0)
 			y = torch.cat([y_clean, y_attack],0)
 
-			ridx = np.random.randint(utterances.size(3)//2, utterances.size(3))
+			ridx = np.random.randint(utterances_la.size(3)//2, utterances_la.size(3))
 			utterances_la = utterances_la[:,:,:,:ridx]
 			utterances_pa = utterances_pa[:,:,:,:ridx]
 			utterances_mix = utterances_mix[:,:,:,:ridx]
