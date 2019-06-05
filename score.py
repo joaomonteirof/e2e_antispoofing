@@ -11,7 +11,10 @@ import scipy.io as sio
 from sklearn import metrics
 
 def compute_eer(y, y_score):
-	fpr, tpr, thresholds = metrics.roc_curve(y, y_score, pos_label=1)
+
+	pred = [0 if x=='spoof' else 1 for x in y]
+
+	fpr, tpr, thresholds = metrics.roc_curve(pred, y_score, pos_label=1)
 	fnr = 1 - tpr
 
 	t = np.nanargmin(np.abs(fnr-fpr))
