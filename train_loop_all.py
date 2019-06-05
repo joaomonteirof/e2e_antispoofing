@@ -124,7 +124,7 @@ class TrainLoop(object):
 		pred_pa = self.model_pa.forward(utterances_pa)
 		mixture_coef = torch.sigmoid(self.model_mix.forward(utterances_mix)).squeeze()
 
-		pred = mixture_coef*pred_la + (1.-mixure_coef)*pred_pa
+		pred = mixture_coef*pred_la + (1.-mixture_coef)*pred_pa
 
 		loss = torch.nn.BCEWithLogitsLoss()(pred, y)
 
@@ -161,7 +161,7 @@ class TrainLoop(object):
 			pred_pa = self.model_pa.forward(utterances_pa)
 			mixture_coef = torch.sigmoid(self.model_mix.forward(utterances_mix)).squeeze()
 
-			pred = mixture_coef*pred_la + (1.-mixure_coef)*pred_pa
+			pred = mixture_coef*pred_la + (1.-mixture_coef)*pred_pa
 
 		return torch.sigmoid(pred).detach().cpu().numpy().squeeze(), y.cpu().numpy().squeeze()
 
