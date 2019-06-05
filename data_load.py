@@ -63,8 +63,8 @@ class Loader_all(Dataset):
 
 	def __init__(self, hdf5_la_clean, hdf5_la_attack, hdf5_pa, hdf5_mix, max_nb_frames, n_cycles=1):
 		super(Loader_all, self).__init__()
-		self.hdf5_la_clean = hdf5_clean
-		self.hdf5_la_attack = hdf5_attack
+		self.hdf5_la_clean = hdf5_la_clean
+		self.hdf5_la_attack = hdf5_la_attack
 		self.hdf5_pa = hdf5_pa
 		self.hdf5_mix = hdf5_mix
 		self.n_cycles = n_cycles
