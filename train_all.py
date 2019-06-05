@@ -48,6 +48,8 @@ args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
 if args.cuda:
 	device = get_freer_gpu()
+else:
+	device = torch.device('cpu')
 
 torch.manual_seed(args.seed)
 if args.cuda:
@@ -170,7 +172,7 @@ optimizer_la = optim.SGD(model_la.parameters(), lr=args.lr, momentum=args.moment
 optimizer_pa = optim.SGD(model_pa.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 optimizer_mix = optim.SGD(model_mix.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 
-trainer = TrainLoop(model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience=args.patience, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
+trainer = TrainLoop(model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience=args.patience, device=device, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
 
 print('Cuda Mode: {}'.format(args.cuda))
 print('Selected models (LA, PA, MIX): {}, {}, {}'.format(args.model_la, args.model_pa, args.model_mix))

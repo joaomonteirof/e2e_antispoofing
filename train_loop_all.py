@@ -10,7 +10,7 @@ from utils import compute_eer
 
 class TrainLoop(object):
 
-	def __init__(self, model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience, checkpoint_path=None, checkpoint_epoch=None, cuda=True):
+	def __init__(self, model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience, device, checkpoint_path=None, checkpoint_epoch=None, cuda=True):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -34,6 +34,7 @@ class TrainLoop(object):
 		self.valid_loader = valid_loader
 		self.total_iters = 0
 		self.cur_epoch = 0
+		self.device = device
 
 		if self.valid_loader is not None:
 			self.history = {'train_loss': [], 'train_loss_batch': [], 'valid_loss': []}
@@ -117,7 +118,7 @@ class TrainLoop(object):
 		utterances_mix = utterances_mix[:,:,:,:ridx]
 
 		if self.cuda_mode:
-			utterances_la, utterances_pa, utterances_mix, y = utterances_la.to(self.model_la.device), utterances_pa.to(self.model_la.device), utterances_mix.to(self.model_la.device), y.to(self.model_la.device)
+			utterances_la, utterances_pa, utterances_mix, y = utterances_la.to(self.device), utterances_pa.to(self.device), utterances_mix.to(self.device), y.to(self.device)
 
 		pred_la = self.model_la.forward(utterances_la)
 		pred_pa = self.model_pa.forward(utterances_pa)
@@ -154,7 +155,7 @@ class TrainLoop(object):
 			utterances_mix = utterances_mix[:,:,:,:ridx]
 
 			if self.cuda_mode:
-				utterances_la, utterances_pa, utterances_mix, y = utterances_la.to(self.model_la.device), utterances_pa.to(self.model_la.device), utterances_mix.to(self.model_la.device), y.to(self.model_la.device)
+				utterances_la, utterances_pa, utterances_mix, y = utterances_la.to(self.device), utterances_pa.to(self.device), utterances_mix.to(self.device), y.to(self.device)
 
 			pred_la = self.model_la.forward(utterances_la)
 			pred_pa = self.model_pa.forward(utterances_pa)
