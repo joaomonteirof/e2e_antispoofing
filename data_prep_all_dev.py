@@ -92,7 +92,7 @@ if __name__ == '__main__':
 		print('Storing utterance ' + utt)
 
 		if args.all_in_one:
-			hdf = all_
+			hdf = all_hdf
 		else:
 			if label_list[i] == 'bonafide':
 				hdf = clean_hdf
