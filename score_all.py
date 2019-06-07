@@ -26,7 +26,9 @@ def prep_feats(data_):
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Compute scores')
-	parser.add_argument('--path-to-data', type=str, default='./data/feats.scp', metavar='Path', help='Path to input data')
+	parser.add_argument('--path-to-data-la', type=str, default='./data_la/feats.scp', metavar='Path', help='Path to input data')
+	parser.add_argument('--path-to-data-pa', type=str, default='./data_pa/feats.scp', metavar='Path', help='Path to input data')
+	parser.add_argument('--path-to-data-mix', type=str, default='./data_mix/feats.scp', metavar='Path', help='Path to input data')
 	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
@@ -144,10 +146,9 @@ if __name__ == '__main__':
 	else:
 		test_utts, attack_type_list, label_list = read_trials(args.trials_path, eval_=args.eval)
 
-	data = { k:m for k,m in read_mat_scp(args.path_to_data) }
-
-	if args.tandem:
-		data = change_keys(data)
+	data_la = { k:m for k,m in read_mat_scp(args.path_to_data_la) }
+	data_pa = { k:m for k,m in read_mat_scp(args.path_to_data_pa) }
+	data_mix = { k:m for k,m in read_mat_scp(args.path_to_data_mix) }
 
 	print('Data loaded')
 
@@ -162,28 +163,34 @@ if __name__ == '__main__':
 
 			print('Computing score for utterance '+ utt)
 
-			feats = prep_feats(data[utt])
+			feats_la = prep_feats(data_la[utt])
+			feats_pa = prep_feats(data_pa[utt])
+			feats_mix = prep_feats(data_mix[utt])
 
 			try:
 				if args.cuda:
-					feats = feats.cuda()
+					feats_la = feats_la.cuda()
+					feats_pa = feats_pa.cuda()
+					feats_mix = feats_mix.cuda()
 					model_la = model_la.cuda()
 					model_pa = model_pa.cuda()
 					model_mix = model_mix.cuda()
 
-				pred_la = model_la.forward(feats).squeeze()
-				pred_pa = model_pa.forward(feats).squeeze()
-				mixture_coef = torch.sigmoid(model_mix.forward(feats)).squeeze()
+				pred_la = model_la.forward(feats_la).squeeze()
+				pred_pa = model_pa.forward(feats_pa).squeeze()
+				mixture_coef = torch.sigmoid(model_mix.forward(feats_mix)).squeeze()
 
 			except:
-				feats = feats.cpu()
+				feats_la = feats_la.cpu()
+				feats_pa = feats_pa.cpu()
+				feats_mix = feats_mix.cpu()
 				model_la = model_la.cpu()
 				model_pa = model_pa.cpu()
 				model_mix = model_mix.cpu()
 
-				pred_la = model_la.forward(feats).squeeze()
-				pred_pa = model_pa.forward(feats).squeeze()
-				mixture_coef = torch.sigmoid(model_mix.forward(feats)).squeeze()
+				pred_la = model_la.forward(feats_la).squeeze()
+				pred_pa = model_pa.forward(feats_pa).squeeze()
+				mixture_coef = torch.sigmoid(model_mix.forward(feats_mix)).squeeze()
 
 			score_list.append(1.-(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).item())
 
