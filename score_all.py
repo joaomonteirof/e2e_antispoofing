@@ -52,9 +52,6 @@ if __name__ == '__main__':
 		os.remove(args.out_path)
 		print(args.out_path + ' Removed')
 
-	print('Cuda Mode is: {}'.format(args.cuda))
-	print('Selected model is: {}'.format(args.model))
-
 	if args.cuda:
 		set_device()
 
@@ -159,9 +156,6 @@ if __name__ == '__main__':
 	with torch.no_grad():
 
 		for i, utt in enumerate(test_utts):
-
-
-			print('Computing score for utterance '+ utt)
 
 			feats_la = prep_feats(data_la[utt])
 			feats_pa = prep_feats(data_pa[utt])
