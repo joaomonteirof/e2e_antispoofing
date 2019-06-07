@@ -8,37 +8,7 @@ from kaldi_io import read_mat_scp
 import model as model_
 import scipy.io as sio
 
-from sklearn import metrics
-
-def compute_eer(y, y_score):
-
-	pred = [0 if x=='spoof' else 1 for x in y]
-
-	fpr, tpr, thresholds = metrics.roc_curve(pred, y_score, pos_label=1)
-	fnr = 1 - tpr
-
-	t = np.nanargmin(np.abs(fnr-fpr))
-	eer_low, eer_high = min(fnr[t],fpr[t]), max(fnr[t],fpr[t])
-	eer = (eer_low+eer_high)*0.5
-
-	return eer
-
-def set_device(trials=10):
-	a = torch.rand(1)
-
-	for i in range(torch.cuda.device_count()):
-		for j in range(trials):
-
-			torch.cuda.set_device(i)
-			try:
-				a = a.cuda()
-				print('GPU {} selected.'.format(i))
-				return
-			except:
-				pass
-
-	print('NO GPU AVAILABLE!!!')
-	exit(1)
+from utils import *
 
 def prep_feats(data_):
 
@@ -53,43 +23,6 @@ def prep_feats(data_):
 
 	return torch.from_numpy(features[np.newaxis, np.newaxis, :, :]).float()
 
-def read_trials(path, eval_=False):
-	with open(path, 'r') as file:
-		utt_labels = file.readlines()
-
-	if eval_:
-
-		utt_list = []
-
-		for line in utt_labels:
-			utt = line.strip('\n')
-			utt_list.append(utt)
-
-		return utt_list
-
-	else:
-
-		utt_list, attack_type_list, label_list = [], [], []
-
-		for line in utt_labels:
-			_, utt, _, attack_type, label = line.split(' ')
-			utt_list.append(utt)
-			attack_type_list.append(attack_type)
-			label_list.append(label.strip('\n'))
-
-		return utt_list, attack_type_list, label_list
-
-def change_keys(data_dict):
-
-	keys_=list(data_dict.keys())
-
-	for i in range(len(keys_)):
-		k = keys_[i]
-		new_k = k.split('-')[0]
-		data_dict[new_k] = data_dict.pop(k)
-
-	return data_dict
-
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Compute scores')
@@ -97,14 +30,16 @@ if __name__ == '__main__':
 	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
-	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC'], default='lcnn_9', help='Model arch')
+	parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC'], default='lcnn_29_CC', help='Model arch')
+	parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC'], default='lcnn_9_prodspec', help='Model arch')
+	parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC'], default='lcnn_29_CC', help='Model arch')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	parser.add_argument('--no-output-file', action='store_true', default=False, help='Disables writing scores into out file')
 	parser.add_argument('--no-eer', action='store_true', default=False, help='Disables computation of EER')
 	parser.add_argument('--eval', action='store_true', default=False, help='Enables eval trials reading')
-	parser.add_argument('--tandem', action='store_true', default=False, help='Scoring with tandem features')
-	parser.add_argument('--ncoef', type=int, default=90, metavar='N', help='Number of cepstral coefs (default: 90)')
-	parser.add_argument('--init-coef', type=int, default=0, metavar='N', help='First cepstral coefs (default: 0)')
+	parser.add_argument('--ncoef-la', type=int, default=90, metavar='N', help='Number of cepstral coefs for the CC case (default: 90)')
+	parser.add_argument('--ncoef-pa', type=int, default=90, metavar='N', help='Number of cepstral coefs for the CC case (default: 90)')
+	parser.add_argument('--ncoef-mix', type=int, default=90, metavar='N', help='Number of cepstral coefs for the CC case (default: 90)')
 	args = parser.parse_args()
 	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
@@ -121,34 +56,84 @@ if __name__ == '__main__':
 	if args.cuda:
 		set_device()
 
-	if args.model == 'lstm':
-		model = model_.cnn_lstm()
-	elif args.model == 'resnet':
-		model = model_.ResNet()
-	elif args.model == 'resnet_pca':
-		model = model_.ResNet_pca()
-	elif args.model == 'lcnn_9':
-		model = model_.lcnn_9layers()
-	elif args.model == 'lcnn_29':
-		model = model_.lcnn_29layers_v2()
-	elif args.model == 'lcnn_9_pca':
-		model = model_.lcnn_9layers_pca()
-	elif args.model == 'lcnn_29_pca':
-		model = model_.lcnn_29layers_v2_pca()
-	elif args.model == 'lcnn_9_icqspec':
-		model = model_.lcnn_9layers_icqspec()
-	elif args.model == 'lcnn_9_prodspec':
-		model = model_.lcnn_9layers_prodspec()
-	elif args.model == 'lcnn_9_CC':
-		model = model_.lcnn_9layers_CC(ncoef=args.ncoef, init_coef=args.init_coef)
-	elif args.model == 'lcnn_29_CC':
-		model = model_.lcnn_29layers_CC(ncoef=args.ncoef, init_coef=args.init_coef)
+	if args.model_la == 'lstm':
+		model_la = model_.cnn_lstm()
+	elif args.model_la == 'resnet':
+		model_la = model_.ResNet()
+	elif args.model_la == 'resnet_pca':
+		model_la = model_.ResNet_pca()
+	elif args.model_la == 'lcnn_9':
+		model_la = model_.lcnn_9layers()
+	elif args.model_la == 'lcnn_29':
+		model_la = model_.lcnn_29layers_v2()
+	elif args.model_la == 'lcnn_9_pca':
+		model_la = model_.lcnn_9layers_pca()
+	elif args.model_la == 'lcnn_29_pca':
+		model_la = model_.lcnn_29layers_v2_pca()
+	elif args.model_la == 'lcnn_9_icqspec':
+		model_la = model_.lcnn_9layers_icqspec()
+	elif args.model_la == 'lcnn_9_prodspec':
+		model_la = model_.lcnn_9layers_prodspec()
+	elif args.model_la == 'lcnn_9_CC':
+		model_la = model_.lcnn_9layers_CC(ncoef=args.ncoef_la)
+	elif args.model_la == 'lcnn_29_CC':
+		model_la = model_.lcnn_29layers_CC(ncoef=args.ncoef_la)
+
+	if args.model_pa == 'lstm':
+		model_pa = model_.cnn_lstm()
+	elif args.model_pa == 'resnet':
+		model_pa = model_.ResNet()
+	elif args.model_pa == 'resnet_pca':
+		model_pa = model_.ResNet_pca()
+	elif args.model_pa == 'lcnn_9':
+		model_pa = model_.lcnn_9layers()
+	elif args.model_pa == 'lcnn_29':
+		model_pa = model_.lcnn_29layers_v2()
+	elif args.model_pa == 'lcnn_9_pca':
+		model_pa = model_.lcnn_9layers_pca()
+	elif args.model_pa == 'lcnn_29_pca':
+		model_pa = model_.lcnn_29layers_v2_pca()
+	elif args.model_pa == 'lcnn_9_icqspec':
+		model_pa = model_.lcnn_9layers_icqspec()
+	elif args.model_pa == 'lcnn_9_prodspec':
+		model_pa = model_.lcnn_9layers_prodspec()
+	elif args.model_pa == 'lcnn_9_CC':
+		model_pa = model_.lcnn_9layers_CC(ncoef=args.ncoef_pa)
+	elif args.model_pa == 'lcnn_29_CC':
+		model_pa = model_.lcnn_29layers_CC(ncoef=args.ncoef_pa)
+
+	if args.model_mix == 'lstm':
+		model_mix = model_.cnn_lstm()
+	elif args.model_mix == 'resnet':
+		model_mix = model_.ResNet()
+	elif args.model_mix == 'resnet_pca':
+		model_mix = model_.ResNet_pca()
+	elif args.model_mix == 'lcnn_9':
+		model_mix = model_.lcnn_9layers()
+	elif args.model_mix == 'lcnn_29':
+		model_mix = model_.lcnn_29layers_v2()
+	elif args.model_mix == 'lcnn_9_pca':
+		model_mix = model_.lcnn_9layers_pca()
+	elif args.model_mix == 'lcnn_29_pca':
+		model_mix = model_.lcnn_29layers_v2_pca()
+	elif args.model_mix == 'lcnn_9_icqspec':
+		model_mix = model_.lcnn_9layers_icqspec()
+	elif args.model_mix == 'lcnn_9_prodspec':
+		model_mix = model_.lcnn_9layers_prodspec()
+	elif args.model_mix == 'lcnn_9_CC':
+		model_mix = model_.lcnn_9layers_CC(ncoef=args.ncoef_mix)
+	elif args.model_mix == 'lcnn_29_CC':
+		model_mix = model_.lcnn_29layers_CC(ncoef=args.ncoef_mix)
 
 	print('Loading model')
 
 	ckpt = torch.load(args.cp_path, map_location = lambda storage, loc: storage)
-	model.load_state_dict(ckpt['model_state'], strict=True)
-	model.eval()
+	model_la.load_state_dict(ckpt['model_la_state'])
+	model_pa.load_state_dict(ckpt['model_pa_state'])
+	model_mix.load_state_dict(ckpt['model_mix_state'])
+	model_la.eval()
+	model_pa.eval()
+	model_mix.eval()
 
 	print('Model loaded')
 
@@ -182,19 +167,25 @@ if __name__ == '__main__':
 			try:
 				if args.cuda:
 					feats = feats.cuda()
-					model = model.cuda()
+					model_la = model_la.cuda()
+					model_pa = model_pa.cuda()
+					model_mix = model_mix.cuda()
 
-				score = 1.-torch.sigmoid(model.forward(feats)).item()
+				pred_la = model_la.forward(feats).squeeze()
+				pred_pa = model_pa.forward(feats).squeeze()
+				mixture_coef = torch.sigmoid(model_mix.forward(feats)).squeeze()
 
 			except:
 				feats = feats.cpu()
-				model = model.cpu()
+				model_la = model_la.cpu()
+				model_pa = model_pa.cpu()
+				model_mix = model_mix.cpu()
 
-				score = 1.-torch.sigmoid(model.forward(feats)).item()
+				pred_la = model_la.forward(feats).squeeze()
+				pred_pa = model_pa.forward(feats).squeeze()
+				mixture_coef = torch.sigmoid(model_mix.forward(feats)).squeeze()
 
-			score_list.append(score)
-
-			print('Score: {}'.format(score_list[-1]))
+			score_list.append(1.-(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).item())
 
 	if not args.no_output_file:
 
@@ -210,6 +201,6 @@ if __name__ == '__main__':
 					f.write("%s" % ' '.join([utt, attack_type_list[i], label_list[i], str(score_list[i])+'\n']))
 
 	if not args.no_eer and not args.eval:
-		print('EER: {}'.format(compute_eer(label_list, score_list)))
+		print('\nEER: {}\n'.format(compute_eer_labels(label_list, score_list)))
 
 	print('All done!!')

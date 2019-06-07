@@ -8,9 +8,9 @@ from kaldi_io import read_mat_scp
 import model as model_
 import scipy.io as sio
 
-from sklearn import metrics
+from utils import compute_eer_labels, set_device, read_trials, change_keys
 
-def compute_eer(y, y_score):
+def compute_eer_labels(y, y_score):
 
 	pred = [0 if x=='spoof' else 1 for x in y]
 
@@ -210,6 +210,6 @@ if __name__ == '__main__':
 					f.write("%s" % ' '.join([utt, attack_type_list[i], label_list[i], str(score_list[i])+'\n']))
 
 	if not args.no_eer and not args.eval:
-		print('EER: {}'.format(compute_eer(label_list, score_list)))
+		print('EER: {}'.format(compute_eer_labels(label_list, score_list)))
 
 	print('All done!!')

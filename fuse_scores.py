@@ -3,7 +3,7 @@ import numpy as np
 import glob
 import os
 
-from sklearn import metrics
+from utils import compute_eer_labels, read_trials, read_file
 
 def calibrate(scores):
 
@@ -31,72 +31,6 @@ def get_non_outliers(scores_set):
 			non_outliers.append(score)
 
 	return non_outliers
-
-def compute_eer(y, y_score):
-
-	pred = [0 if x=='spoof' else 1 for x in y]
-
-	fpr, tpr, thresholds = metrics.roc_curve(pred, y_score, pos_label=1)
-	fnr = 1 - tpr
-
-	t = np.nanargmin(np.abs(fnr-fpr))
-	eer_low, eer_high = min(fnr[t],fpr[t]), max(fnr[t],fpr[t])
-	eer = (eer_low+eer_high)*0.5
-
-	return eer
-
-def read_trials(path, eval_=False):
-	with open(path, 'r') as file:
-		utt_labels = file.readlines()
-
-	if eval_:
-
-		utt_list = []
-
-		for line in utt_labels:
-			utt = line.strip('\n')
-			utt_list.append(utt)
-
-		return utt_list
-
-	else:
-
-		utt_list, attack_type_list, label_list = [], [], []
-
-		for line in utt_labels:
-			_, utt, _, attack_type, label = line.split(' ')
-			utt_list.append(utt)
-			attack_type_list.append(attack_type)
-			label_list.append(label.strip('\n'))
-
-		return utt_list, attack_type_list, label_list
-
-def read_file(path, eval_=False):
-
-	print('Reading data from file: {}'.format(path))
-
-	with open(path, 'r') as file:
-		utt_labels = file.readlines()
-
-	utt_list, score_list = [], []
-
-	if eval_:
-
-		for line in utt_labels:
-			utt, score = line.split(' ')
-			utt_list.append(utt)
-			score_list.append(float(score.strip('\n')))
-
-		return utt_list, score_list
-
-	else:
-
-		for line in utt_labels:
-			utt, _, _, score = line.split(' ')
-			utt_list.append(utt)
-			score_list.append(float(score.strip('\n')))
-
-		return utt_list, score_list
 
 def read_scores(path, calibrate_=False, eval_=False):
 
@@ -177,6 +111,6 @@ if __name__ == '__main__':
 					f.write("%s" % ' '.join([utt, attack_type_list[i], label_list[i], str(score_list[i])+'\n']))
 
 	if not args.no_eer and not args.eval:
-		print('EER: {}'.format(compute_eer(label_list, score_list)))
+		print('EER: {}'.format(compute_eer_labels(label_list, score_list)))
 
 	print('All done!!')

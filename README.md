@@ -1,1 +1,1 @@
-# Combined loss for verification
+# End-to-end spoofing detection

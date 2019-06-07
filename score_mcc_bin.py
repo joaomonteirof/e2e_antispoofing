@@ -8,34 +8,7 @@ from kaldi_io import read_mat_scp
 import model as model_
 import scipy.io as sio
 
-from sklearn import metrics
-
-def compute_eer(y, y_score):
-	fpr, tpr, thresholds = metrics.roc_curve(y, y_score, pos_label=1)
-	fnr = 1 - tpr
-
-	t = np.nanargmin(np.abs(fnr-fpr))
-	eer_low, eer_high = min(fnr[t],fpr[t]), max(fnr[t],fpr[t])
-	eer = (eer_low+eer_high)*0.5
-
-	return eer
-
-def set_device(trials=10):
-	a = torch.rand(1)
-
-	for i in range(torch.cuda.device_count()):
-		for j in range(trials):
-
-			torch.cuda.set_device(i)
-			try:
-				a = a.cuda()
-				print('GPU {} selected.'.format(i))
-				return
-			except:
-				pass
-
-	print('NO GPU AVAILABLE!!!')
-	exit(1)
+from utils import compute_eer_labels, set_device, read_trials
 
 def prep_feats(data_):
 
@@ -49,32 +22,6 @@ def prep_feats(data_):
 		features = features[:, :50]
 
 	return torch.from_numpy(features[np.newaxis, np.newaxis, :, :]).float()
-
-def read_trials(path, eval_=False):
-	with open(path, 'r') as file:
-		utt_labels = file.readlines()
-
-	if eval_:
-
-		utt_list = []
-
-		for line in utt_labels:
-			utt = line.strip('\n')
-			utt_list.append(utt)
-
-		return utt_list
-
-	else:
-
-		utt_list, attack_type_list, label_list = [], [], []
-
-		for line in utt_labels:
-			_, utt, _, attack_type, label = line.split(' ')
-			utt_list.append(utt)
-			attack_type_list.append(attack_type)
-			label_list.append(label.strip('\n'))
-
-		return utt_list, attack_type_list, label_list
 
 if __name__ == '__main__':
 
@@ -188,6 +135,6 @@ if __name__ == '__main__':
 					f.write("%s" % ' '.join([utt, attack_type_list[i], label_list[i], str(score_list[i])+'\n']))
 
 	if not args.no_eer and not args.eval:
-		print('EER: {}'.format(compute_eer(label_list, score_list)))
+		print('EER: {}'.format(compute_eer_labels(label_list, score_list)))
 
 	print('All done!!')
