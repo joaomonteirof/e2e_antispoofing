@@ -167,6 +167,28 @@ class Bottleneck(nn.Module):
 
 		return out
 
+class PreActBlock(nn.Module):
+	'''Pre-activation version of the BasicBlock.'''
+	expansion = 1
+
+	def __init__(self, in_planes, planes, stride=1):
+		super(PreActBlock, self).__init__()
+		self.bn1 = nn.BatchNorm2d(in_planes)
+		self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
+		self.bn2 = nn.BatchNorm2d(planes)
+		self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
+
+		if stride != 1 or in_planes != self.expansion*planes:
+			self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False))
+
+	def forward(self, x):
+		out = F.relu(self.bn1(x))
+		shortcut = self.shortcut(out) if hasattr(self, 'shortcut') else x
+		out = self.conv1(out)
+		out = self.conv2(F.relu(self.bn2(out)))
+		out += shortcut
+		return out
+
 class ResNet(nn.Module):
 	def __init__(self, layers=[3,4,6,3], block=Bottleneck, nclasses=-1):
 		self.inplanes = 16
@@ -308,6 +330,71 @@ class ResNet_pca(nn.Module):
 		#embs = torch.div(mu, torch.norm(mu, 2, 1).unsqueeze(1).expand_as(mu))
 
 		return mu
+
+class ResNet_34_CC(nn.Module):
+	def __init__(self, n_z=256, layers=[3,4,6,3], block=PreActBlock, nclasses=-1, ncoef=90, init_coef=0):
+		self.in_planes = 16
+		super(ResNet_34_CC, self).__init__()
+
+		self.ncoef=ncoef
+		self.init_coef=init_coef
+
+		self.conv1 = nn.Conv2d(1, 16, kernel_size=(ncoef,3), stride=(1,1), padding=(0,1), bias=False)
+		self.bn1 = nn.BatchNorm2d(16)
+		self.activation = nn.ReLU()
+		
+		self.layer1 = self._make_layer(block, 64, layers[0], stride=1)
+		self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+		self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
+		self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
+
+		self.fc_1 = nn.Linear(block.expansion*512*2,512)
+		self.lbn = nn.BatchNorm1d(512)
+
+		self.fc_2 = nn.Linear(512, nclasses) if nclasses>2 else nn.Linear(512, 1)
+
+		self.initialize_params()
+
+		self.attention = SelfAttention(block.expansion*512)
+
+	def initialize_params(self):
+
+		for layer in self.modules():
+			if isinstance(layer, torch.nn.Conv2d):
+				init.kaiming_normal_(layer.weight, a=0, mode='fan_out')
+			elif isinstance(layer, torch.nn.Linear):
+				init.kaiming_uniform_(layer.weight)
+			elif isinstance(layer, torch.nn.BatchNorm2d) or isinstance(layer, torch.nn.BatchNorm1d):
+				layer.weight.data.fill_(1)
+				layer.bias.data.zero_()
+
+	def _make_layer(self, block, planes, num_blocks, stride):
+		strides = [stride] + [1]*(num_blocks-1)
+		layers = []
+		for stride in strides:
+			layers.append(block(self.in_planes, planes, stride))
+			self.in_planes = planes * block.expansion
+		return nn.Sequential(*layers)
+
+	def forward(self, x):
+
+		x = x[:,:,self.init_coef:,:]
+
+		x = self.conv1(x)
+		x = self.activation(self.bn1(x))
+		x = self.layer1(x)
+		x = self.layer2(x)
+		x = self.layer3(x)
+		x = self.layer4(x)
+		x = x.squeeze(2)
+
+		stats = self.attention(x.permute(0,2,1).contiguous())
+
+		fc = F.relu(self.lbn(self.fc_1(stats)))
+
+		out = self.fc_2(fc)
+
+		return out
 
 class mfm(nn.Module):
 	def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, type=1):

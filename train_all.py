@@ -12,9 +12,9 @@ from utils import *
 
 # Training settings
 parser = argparse.ArgumentParser(description='Speaker embbedings with contrastive loss')
-parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC'], default='lcnn_29_CC', help='Model arch')
-parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC'], default='lcnn_9_prodspec', help='Model arch')
-parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_34_CC'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_34_CC'], default='lcnn_9_prodspec', help='Model arch')
+parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_34_CC'], default='lcnn_29_CC', help='Model arch')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--epochs', type=int, default=500, metavar='N', help='number of epochs to train (default: 500)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR', help='learning rate (default: 0.001)')
@@ -83,6 +83,8 @@ elif args.model_la == 'lcnn_9_CC':
 	model_la = model_.lcnn_9layers_CC(ncoef=args.ncoef_la)
 elif args.model_la == 'lcnn_29_CC':
 	model_la = model_.lcnn_29layers_CC(ncoef=args.ncoef_la)
+elif args.model_la == 'resnet_34_CC':
+	model_la = model_.ResNet_34_CC(ncoef=args.ncoef_la)
 
 if args.model_pa == 'lstm':
 	model_pa = model_.cnn_lstm()
@@ -106,6 +108,8 @@ elif args.model_pa == 'lcnn_9_CC':
 	model_pa = model_.lcnn_9layers_CC(ncoef=args.ncoef_pa)
 elif args.model_pa == 'lcnn_29_CC':
 	model_pa = model_.lcnn_29layers_CC(ncoef=args.ncoef_pa)
+elif args.model_pa == 'resnet_34_CC':
+	model_pa = model_.ResNet_34_CC(ncoef=args.ncoef_pa)
 
 if args.model_mix == 'lstm':
 	model_mix = model_.cnn_lstm()
@@ -129,6 +133,8 @@ elif args.model_mix == 'lcnn_9_CC':
 	model_mix = model_.lcnn_9layers_CC(ncoef=args.ncoef_mix)
 elif args.model_mix == 'lcnn_29_CC':
 	model_mix = model_.lcnn_29layers_CC(ncoef=args.ncoef_mix)
+elif args.model_mix == 'resnet_34_CC':
+	model_mix = model_.ResNet_34_CC(ncoef=args.ncoef_mix)
 
 if args.pretrained_la_path is not None:
 	ckpt = torch.load(args.pretrained_la_path, map_location = lambda storage, loc: storage)

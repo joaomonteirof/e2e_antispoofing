@@ -10,7 +10,7 @@ from data_load import Loader
 
 # Training settings
 parser = argparse.ArgumentParser(description='Test new architectures')
-parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC'], default='resnet', help='Model arch')
+parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_34_CC'], default='resnet', help='Model arch')
 args = parser.parse_args()
 
 if args.model == 'lstm':
@@ -66,5 +66,10 @@ elif args.model == 'lcnn_9_CC':
 elif args.model == 'lcnn_29_CC':
 	batch = torch.rand(3, 1, 90, 300)
 	model = model_.lcnn_29layers_CC()
+	mu = model.forward(batch)
+	print(mu.size())
+elif args.model == 'resnet_34_CC':
+	batch = torch.rand(3, 1, 90, 300)
+	model = model_.ResNet_34_CC()
 	mu = model.forward(batch)
 	print(mu.size())

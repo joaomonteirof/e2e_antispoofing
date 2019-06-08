@@ -32,9 +32,9 @@ if __name__ == '__main__':
 	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
-	parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC'], default='lcnn_29_CC', help='Model arch')
-	parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC'], default='lcnn_9_prodspec', help='Model arch')
-	parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC'], default='lcnn_29_CC', help='Model arch')
+	parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_34_CC'], default='lcnn_29_CC', help='Model arch')
+	parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_34_CC'], default='lcnn_9_prodspec', help='Model arch')
+	parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_34_CC'], default='lcnn_29_CC', help='Model arch')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	parser.add_argument('--no-output-file', action='store_true', default=False, help='Disables writing scores into out file')
 	parser.add_argument('--no-eer', action='store_true', default=False, help='Disables computation of EER')
@@ -77,6 +77,8 @@ if __name__ == '__main__':
 		model_la = model_.lcnn_9layers_CC(ncoef=args.ncoef_la)
 	elif args.model_la == 'lcnn_29_CC':
 		model_la = model_.lcnn_29layers_CC(ncoef=args.ncoef_la)
+	elif args.model_la == 'resnet_34_CC':
+		model_la = model_.ResNet_34_CC(ncoef=args.ncoef_la)
 
 	if args.model_pa == 'lstm':
 		model_pa = model_.cnn_lstm()
@@ -100,6 +102,8 @@ if __name__ == '__main__':
 		model_pa = model_.lcnn_9layers_CC(ncoef=args.ncoef_pa)
 	elif args.model_pa == 'lcnn_29_CC':
 		model_pa = model_.lcnn_29layers_CC(ncoef=args.ncoef_pa)
+	elif args.model_pa == 'resnet_34_CC':
+		model_pa = model_.ResNet_34_CC(ncoef=args.ncoef_pa)
 
 	if args.model_mix == 'lstm':
 		model_mix = model_.cnn_lstm()
@@ -123,6 +127,8 @@ if __name__ == '__main__':
 		model_mix = model_.lcnn_9layers_CC(ncoef=args.ncoef_mix)
 	elif args.model_mix == 'lcnn_29_CC':
 		model_mix = model_.lcnn_29layers_CC(ncoef=args.ncoef_mix)
+	elif args.model_mix == 'resnet_34_CC':
+		model_mix = model_.ResNet_34_CC(ncoef=args.ncoef_mix)
 
 	print('Loading model')
 
