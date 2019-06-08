@@ -26,6 +26,7 @@ class TrainLoop_mcc(object):
 		self.valid_loader = valid_loader
 		self.total_iters = 0
 		self.cur_epoch = 0
+		self.device = self.model.device
 
 		if self.valid_loader is not None:
 			self.history = {'train_loss': [], 'train_loss_batch': [], 'valid_loss': []}
@@ -97,7 +98,7 @@ class TrainLoop_mcc(object):
 		utterances = utterances[:,:,:,:ridx]
 
 		if self.cuda_mode:
-			utterances, y = utterances.cuda(), y.cuda()
+			utterances, y = utterances.to(self.device), y.to(self.device)
 
 		pred = self.model.forward(utterances)
 
@@ -119,7 +120,7 @@ class TrainLoop_mcc(object):
 			y = torch.cat([y_a, y_b],0).squeeze()
 
 			if self.cuda_mode:
-				utterances, y = utterances.cuda(), y.cuda()
+				utterances, y = utterances.to(self.device), y.to(self.device)
 
 			pred = F.softmax(self.model.forward(utterances), dim=1).max(1)[1].long()
 			correct = pred.eq(y)
@@ -154,7 +155,7 @@ class TrainLoop_mcc(object):
 			self.total_iters = ckpt['total_iters']
 			self.cur_epoch = ckpt['cur_epoch']
 			if self.cuda_mode:
-				self.model = self.model.cuda()
+				self.model = self.model.to(self.device)
 
 		else:
 			print('No checkpoint found at: {}'.format(ckpt))
