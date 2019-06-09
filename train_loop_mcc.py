@@ -26,7 +26,7 @@ class TrainLoop_mcc(object):
 		self.valid_loader = valid_loader
 		self.total_iters = 0
 		self.cur_epoch = 0
-		self.device = self.model.device
+		self.device = next(self.model.parameters()).device
 
 		if self.valid_loader is not None:
 			self.history = {'train_loss': [], 'train_loss_batch': [], 'valid_loss': []}
