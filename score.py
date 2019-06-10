@@ -10,19 +10,6 @@ import scipy.io as sio
 
 from utils import compute_eer_labels, set_device, read_trials, change_keys
 
-def compute_eer_labels(y, y_score):
-
-	pred = [0 if x=='spoof' else 1 for x in y]
-
-	fpr, tpr, thresholds = metrics.roc_curve(pred, y_score, pos_label=1)
-	fnr = 1 - tpr
-
-	t = np.nanargmin(np.abs(fnr-fpr))
-	eer_low, eer_high = min(fnr[t],fpr[t]), max(fnr[t],fpr[t])
-	eer = (eer_low+eer_high)*0.5
-
-	return eer
-
 def set_device(trials=10):
 	a = torch.rand(1)
 
@@ -52,43 +39,6 @@ def prep_feats(data_):
 		features = features[:, :50]
 
 	return torch.from_numpy(features[np.newaxis, np.newaxis, :, :]).float()
-
-def read_trials(path, eval_=False):
-	with open(path, 'r') as file:
-		utt_labels = file.readlines()
-
-	if eval_:
-
-		utt_list = []
-
-		for line in utt_labels:
-			utt = line.strip('\n')
-			utt_list.append(utt)
-
-		return utt_list
-
-	else:
-
-		utt_list, attack_type_list, label_list = [], [], []
-
-		for line in utt_labels:
-			_, utt, _, attack_type, label = line.split(' ')
-			utt_list.append(utt)
-			attack_type_list.append(attack_type)
-			label_list.append(label.strip('\n'))
-
-		return utt_list, attack_type_list, label_list
-
-def change_keys(data_dict):
-
-	keys_=list(data_dict.keys())
-
-	for i in range(len(keys_)):
-		k = keys_[i]
-		new_k = k.split('-')[0]
-		data_dict[new_k] = data_dict.pop(k)
-
-	return data_dict
 
 if __name__ == '__main__':
 
@@ -176,9 +126,6 @@ if __name__ == '__main__':
 
 		for i, utt in enumerate(test_utts):
 
-
-			print('Computing score for utterance '+ utt)
-
 			feats = prep_feats(data[utt])
 
 			try:
@@ -195,8 +142,6 @@ if __name__ == '__main__':
 				score = 1.-torch.sigmoid(model.forward(feats)).item()
 
 			score_list.append(score)
-
-			print('Score: {}'.format(score_list[-1]))
 
 	if not args.no_output_file:
 
