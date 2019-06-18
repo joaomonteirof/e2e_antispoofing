@@ -158,11 +158,13 @@ if __name__ == '__main__':
 
 	print('Start of scores computation')
 
-	score_all_list = []
-	score_LA_list = []
-	score_PA_list = []
-	score_mix_list = []
-	score_fusion_list = []
+	scores = {}
+
+	scores['all'] = []
+	scores['la'] = []
+	scores['pa'] = []
+	scores['mix'] = []
+	scores['fusion'] = []
 
 	with torch.no_grad():
 
@@ -200,23 +202,21 @@ if __name__ == '__main__':
 				score_all = 1.-torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).squeeze().item()
 				score_la = 1.-torch.sigmoid(pred_la).squeeze().item()
 				score_pa = 1.-torch.sigmoid(pred_pa).squeeze().item()
-				score_mix = 1.-torch.sigmoid(pred_pa).squeeze().item()
-				score_fusion = 2*abs(mixture_coef-0.5)
+				score_mix = 2*abs(mixture_coef-0.5)
+				score_fusion = (score_all+score_la+score_pa+score_mix)/4.
 
-			score_all_list.append(score_all)
-			score_la_list.append(score_la)
-			score_pa_list.append(score_pa)
-			score_mix_list.append(score_mix)
-			score_fusion_list.append(score_fusion)
+			scores['all'].append(score_all)
+			scores['la'].append(score_la)
+			scores['pa'].append(score_pa)
+			scores['mix'].append(score_mix)
+			scores['fusion'].append(score_fusion)
 
 	if not args.no_output_file:
 
 		print('Storing scores in output file:')
 		print(args.out_path)
 
-		score_types_list = ['all', 'la', 'pa', 'mix', 'fusion']
-
-		for score_type in score_types_list
+		for score_type, score_list in scores.items()
 
 			file_name = args.out_path+args.prefix+'_'+score_type+'.txt'
 
@@ -229,10 +229,7 @@ if __name__ == '__main__':
 						f.write("%s" % ' '.join([utt, attack_type_list[i], label_list[i], str(score_list[i])+'\n']))
 
 	if not args.no_eer and not args.eval:
-		print('\nEER all: {}\n'.format(compute_eer_labels(label_list, score_all_list)))
-		print('\nEER la: {}\n'.format(compute_eer_labels(label_list, score_la_list)))
-		print('\nEER pa: {}\n'.format(compute_eer_labels(label_list, score_pa_list)))
-		print('\nEER mix: {}\n'.format(compute_eer_labels(label_list, score_mix_list)))
-		print('\nEER fusion: {}\n'.format(compute_eer_labels(label_list, score_fusion_list)))
+		for score_type, score_list in scores.items()
+			print('\nEER {}: {}\n'.format(score_type, compute_eer_labels(label_list, score_list)))
 
 	print('All done!!')
