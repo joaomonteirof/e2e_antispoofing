@@ -199,10 +199,10 @@ if __name__ == '__main__':
 				pred_pa = model_pa.forward(feats_pa).squeeze()
 				mixture_coef = torch.sigmoid(model_mix.forward(feats_mix)).squeeze()
 
-			score_all = 1.-torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).squeeze().item()
-			score_la = 1.-torch.sigmoid(pred_la).squeeze().item()
-			score_pa = 1.-torch.sigmoid(pred_pa).squeeze().item()
-			score_mix = 2*abs(mixture_coef-0.5)
+			score_all = 1.-torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).squeeze().cpu().item()
+			score_la = 1.-torch.sigmoid(pred_la).squeeze().cpu().item()
+			score_pa = 1.-torch.sigmoid(pred_pa).squeeze().cpu().item()
+			score_mix = 2*abs(mixture_coef.cpu().item()-0.5)
 			score_fusion = (score_all+score_la+score_pa+score_mix)/4.
 
 			scores['all'].append(score_all)
@@ -220,7 +220,7 @@ if __name__ == '__main__':
 
 			file_name = args.out_path+args.prefix+'_'+score_type+'.txt'
 
-			with open(args.out_path, 'w') as f:
+			with open(file_name, 'w') as f:
 				if args.eval:
 					for i, utt in enumerate(test_utts):
 						f.write("%s" % ' '.join([utt, str(score_list[i])+'\n']))
