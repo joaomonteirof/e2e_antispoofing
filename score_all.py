@@ -216,7 +216,7 @@ if __name__ == '__main__':
 		print('Storing scores in output file:')
 		print(args.out_path)
 
-		for score_type, score_list in scores.items()
+		for score_type, score_list in scores.items():
 
 			file_name = args.out_path+args.prefix+'_'+score_type+'.txt'
 
@@ -229,7 +229,7 @@ if __name__ == '__main__':
 						f.write("%s" % ' '.join([utt, attack_type_list[i], label_list[i], str(score_list[i])+'\n']))
 
 	if not args.no_eer and not args.eval:
-		for score_type, score_list in scores.items()
+		for score_type, score_list in scores.items():
 			print('\nEER {}: {}\n'.format(score_type, compute_eer_labels(label_list, score_list)))
 
 	print('All done!!')
