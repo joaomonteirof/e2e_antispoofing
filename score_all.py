@@ -199,11 +199,11 @@ if __name__ == '__main__':
 				pred_pa = model_pa.forward(feats_pa).squeeze()
 				mixture_coef = torch.sigmoid(model_mix.forward(feats_mix)).squeeze()
 
-				score_all = 1.-torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).squeeze().item()
-				score_la = 1.-torch.sigmoid(pred_la).squeeze().item()
-				score_pa = 1.-torch.sigmoid(pred_pa).squeeze().item()
-				score_mix = 2*abs(mixture_coef-0.5)
-				score_fusion = (score_all+score_la+score_pa+score_mix)/4.
+			score_all = 1.-torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).squeeze().item()
+			score_la = 1.-torch.sigmoid(pred_la).squeeze().item()
+			score_pa = 1.-torch.sigmoid(pred_pa).squeeze().item()
+			score_mix = 2*abs(mixture_coef-0.5)
+			score_fusion = (score_all+score_la+score_pa+score_mix)/4.
 
 			scores['all'].append(score_all)
 			scores['la'].append(score_la)
