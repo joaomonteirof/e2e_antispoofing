@@ -181,6 +181,7 @@ optimizer_mix = optim.SGD(model_mix.parameters(), lr=args.lr, momentum=args.mome
 trainer = TrainLoop(model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience=args.patience, device=device, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
 
 print('Cuda Mode: {}'.format(args.cuda))
+print('Device: {}'.format(device))
 print('Selected models (LA, PA, MIX): {}, {}, {}'.format(args.model_la, args.model_pa, args.model_mix))
 print('Batch size: {}'.format(args.batch_size))
 print('LR: {}'.format(args.lr))
