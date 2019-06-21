@@ -43,8 +43,8 @@ class cnn_lstm(nn.Module):
 		c0 = torch.zeros(2*2, batch_size, 512)
 
 		if x.is_cuda:
-			h0 = h0.cuda()
-			c0 = c0.cuda()
+			h0 = h0.to(x.device)
+			c0 = c0.to(x.device)
 
 		out_seq, h_c = self.lstm(feats, (h0, c0))
 
@@ -89,7 +89,7 @@ class SelfAttention(nn.Module):
 		noise = 1e-5*torch.randn(weighted.size())
 
 		if inputs.is_cuda:
-			noise = noise.cuda()
+			noise = noise.to(inputs.device)
 
 		avg_repr, std_repr = weighted.sum(1), (weighted+noise).std(1)
 
