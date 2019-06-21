@@ -81,7 +81,7 @@ if __name__ == '__main__':
 	data = { k:m for k,m in read_mat_scp(args.path_to_data) }
 	test_utts, attack_type_list, label_list = read_trials(args.trials_path)
 
-	if args.args.path_to_more_data:
+	if args.path_to_more_data:
 		for k,m in read_mat_scp(args.path_to_more_data):
 			data[k]=m
 
