@@ -170,9 +170,9 @@ if args.pretrained_mix_path is not None:
 		raise
 
 if args.cuda:
-	model_la = model_la.cuda(device)
-	model_pa = model_pa.cuda(device)
-	model_mix = model_mix.cuda(device)
+	model_la = model_la.to(device)
+	model_pa = model_pa.to(device)
+	model_mix = model_mix.to(device)
 
 optimizer_la = optim.SGD(model_la.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 optimizer_pa = optim.SGD(model_pa.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
