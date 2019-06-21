@@ -8,7 +8,7 @@ from kaldi_io import read_mat_scp
 import model as model_
 import scipy.io as sio
 
-from utils import compute_eer_labels, set_device, read_trials
+from utils import compute_eer_labels, set_device, read_trials, get_freer_gpu
 
 def prep_feats(data_):
 
@@ -30,13 +30,14 @@ if __name__ == '__main__':
 	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
-	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_LA'], default='lcnn_9', help='Model arch')
+	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_34_CC'], default='lcnn_9', help='Model arch')
 	parser.add_argument('--n-classes', type=int, default=-1, metavar='N', help='Number of classes for the mcc case (default: binary classification)')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	parser.add_argument('--no-output-file', action='store_true', default=False, help='Disables writing scores into out file')
 	parser.add_argument('--no-eer', action='store_true', default=False, help='Disables computation of EER')
 	parser.add_argument('--eval', action='store_true', default=False, help='Enables eval trials reading')
-	parser.add_argument('--ncoef', type=int, default=90, metavar='N', help='Number of cepstral coefs for the LA case (default: 90)')
+	parser.add_argument('--ncoef', type=int, default=90, metavar='N', help='Number of cepstral coefs (default: 90)')
+	parser.add_argument('--init-coef', type=int, default=0, metavar='N', help='First cepstral coefs (default: 0)')
 	args = parser.parse_args()
 	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
@@ -51,7 +52,7 @@ if __name__ == '__main__':
 	print('Selected model is: {}'.format(args.model))
 
 	if args.cuda:
-		set_device()
+		device = get_freer_gpu()
 
 	if args.model == 'lstm':
 		model = model_.cnn_lstm(nclasses=args.n_classes)
@@ -71,6 +72,12 @@ if __name__ == '__main__':
 		model = model_.lcnn_9layers_icqspec(nclasses=args.n_classes)
 	elif args.model == 'lcnn_9_prodspec':
 		model = model_.lcnn_9layers_prodspec(nclasses=args.n_classes)
+	elif args.model == 'lcnn_9_CC':
+		model = model_.lcnn_9layers_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
+	elif args.model == 'lcnn_29_CC':
+		model = model_.lcnn_29layers_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
+	elif args.model == 'resnet_34_CC':
+		model = model_.ResNet_34_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
 
 	print('Loading model')
 
@@ -106,8 +113,8 @@ if __name__ == '__main__':
 
 			try:
 				if args.cuda:
-					feats = feats.cuda()
-					model = model.cuda()
+					feats = feats.to(device)
+					model = model.to(device)
 
 				score = 1.-F.softmax(model.forward(feats), dim=1)[:,1:].sum().item()
 

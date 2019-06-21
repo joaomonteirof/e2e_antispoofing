@@ -100,7 +100,7 @@ if args.pretrained_path is not None:
 		raise
 
 if args.cuda:
-	model = model.cuda(device)
+	model = model.to(device)
 
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 
@@ -110,6 +110,7 @@ else:
 	trainer = TrainLoop(model, optimizer, train_loader, valid_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
 
 print('Cuda Mode: {}'.format(args.cuda))
+print('Device: {}'.format(device))
 print('Selected model: {}'.format(args.model))
 print('Batch size: {}'.format(args.batch_size))
 print('LR: {}'.format(args.lr))

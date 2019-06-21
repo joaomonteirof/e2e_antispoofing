@@ -54,7 +54,7 @@ if __name__ == '__main__':
 		print(args.out_path + ' Removed')
 
 	if args.cuda:
-		set_device()
+		device = get_freer_gpu()
 
 	if args.model_la == 'lstm':
 		model_la = model_.cnn_lstm()
@@ -176,12 +176,12 @@ if __name__ == '__main__':
 
 			try:
 				if args.cuda:
-					feats_la = feats_la.cuda()
-					feats_pa = feats_pa.cuda()
-					feats_mix = feats_mix.cuda()
-					model_la = model_la.cuda()
-					model_pa = model_pa.cuda()
-					model_mix = model_mix.cuda()
+					feats_la = feats_la.to(device)
+					feats_pa = feats_pa.to(device)
+					feats_mix = feats_mix.to(device)
+					model_la = model_la.to(device)
+					model_pa = model_pa.to(device)
+					model_mix = model_mix.to(device)
 
 				pred_la = model_la.forward(feats_la).squeeze()
 				pred_pa = model_pa.forward(feats_pa).squeeze()

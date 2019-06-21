@@ -8,24 +8,7 @@ from kaldi_io import read_mat_scp
 import model as model_
 import scipy.io as sio
 
-from utils import compute_eer_labels, set_device, read_trials, change_keys
-
-def set_device(trials=10):
-	a = torch.rand(1)
-
-	for i in range(torch.cuda.device_count()):
-		for j in range(trials):
-
-			torch.cuda.set_device(i)
-			try:
-				a = a.cuda()
-				print('GPU {} selected.'.format(i))
-				return
-			except:
-				pass
-
-	print('NO GPU AVAILABLE!!!')
-	exit(1)
+from utils import compute_eer_labels, get_freer_gpu, read_trials, change_keys
 
 def prep_feats(data_):
 
@@ -69,7 +52,7 @@ if __name__ == '__main__':
 	print('Selected model is: {}'.format(args.model))
 
 	if args.cuda:
-		set_device()
+		device = get_freer_gpu()
 
 	if args.model == 'lstm':
 		model = model_.cnn_lstm()
@@ -130,8 +113,8 @@ if __name__ == '__main__':
 
 			try:
 				if args.cuda:
-					feats = feats.cuda()
-					model = model.cuda()
+					feats = feats.to(device)
+					model = model.to(device)
 
 				score = 1.-torch.sigmoid(model.forward(feats)).item()
 
