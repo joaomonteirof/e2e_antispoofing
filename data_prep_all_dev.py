@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Train data preparation and storage in .hdf')
 	parser.add_argument('--path-to-data', type=str, default='./data/feats.scp', metavar='Path', help='Path to feats.scp')
-	parser.add_argument('--path-to-more-data', type=str, default='./more_data/feats.scp', metavar='Path', help='Path to feats.scp')
+	parser.add_argument('--path-to-more-data', type=str, default=None, metavar='Path', help='Path to feats.scp')
 	parser.add_argument('--all-in-one', action='store_true', default=False, help='Dumps all data into single hdf rather than separate depending on clean/spoof')
 	parser.add_argument('--out-path', type=str, default='./', metavar='Path', help='Path to output hdf file')
 	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
@@ -79,13 +79,15 @@ if __name__ == '__main__':
 
 
 	data = { k:m for k,m in read_mat_scp(args.path_to_data) }
-	for k,m in read_mat_scp(args.path_to_more_data):
-		data[k]=m
-
 	test_utts, attack_type_list, label_list = read_trials(args.trials_path)
-	more_test_utts, more_attack_type_list, more_label_list = read_trials(args.more_trials_path)
-	test_utts.extend(more_test_utts)
-	label_list.extend(more_label_list)
+
+	if args.args.path_to_more_data:
+		for k,m in read_mat_scp(args.path_to_more_data):
+			data[k]=m
+
+		more_test_utts, more_attack_type_list, more_label_list = read_trials(args.more_trials_path)
+		test_utts.extend(more_test_utts)
+		label_list.extend(more_label_list)
 
 	for i, utt in enumerate(test_utts):
 
