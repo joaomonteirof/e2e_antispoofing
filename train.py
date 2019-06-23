@@ -55,9 +55,9 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_
 
 if args.valid_hdf_path is not None:
 	if args.n_classes>2:	
-		valid_dataset = Loader_mcc(hdf5_clean = args.train_hdf_path+'valid_clean.hdf', hdf5_attack = args.train_hdf_path+'valid_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles, file_lists_path=args.lists_path)
+		valid_dataset = Loader_mcc(hdf5_clean = args.valid_hdf_path+'valid_clean.hdf', hdf5_attack = args.valid_hdf_path+'valid_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles, file_lists_path=args.lists_path)
 	else:
-		valid_dataset = Loader(hdf5_clean = args.train_hdf_path+'valid_clean.hdf', hdf5_attack = args.train_hdf_path+'valid_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles)
+		valid_dataset = Loader(hdf5_clean = args.valid_hdf_path+'valid_clean.hdf', hdf5_attack = args.valid_hdf_path+'valid_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles)
 	valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, worker_init_fn=set_np_randomseed)
 else:
 	valid_loader=None
