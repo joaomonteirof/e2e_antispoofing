@@ -15,6 +15,7 @@ from utils import *
 parser = argparse.ArgumentParser(description='Speaker embbedings with contrastive loss')
 parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_34_CC'], default='lcnn_9', help='Model arch')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
+parser.add_argument('--valid-batch-size', type=int, default=64, metavar='N', help='input batch size for validation (default: 64)')
 parser.add_argument('--epochs', type=int, default=500, metavar='N', help='number of epochs to train (default: 500)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR', help='learning rate (default: 0.001)')
 parser.add_argument('--momentum', type=float, default=0.9, metavar='alpha', help='Alpha (default: 0.9)')
@@ -58,7 +59,7 @@ if args.valid_hdf_path is not None:
 		valid_dataset = Loader_mcc(hdf5_clean = args.valid_hdf_path+'valid_clean.hdf', hdf5_attack = args.valid_hdf_path+'valid_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles, file_lists_path=args.lists_path)
 	else:
 		valid_dataset = Loader(hdf5_clean = args.valid_hdf_path+'valid_clean.hdf', hdf5_attack = args.valid_hdf_path+'valid_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles)
-	valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, worker_init_fn=set_np_randomseed)
+	valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.valid_batch_size, shuffle=False, worker_init_fn=set_np_randomseed)
 else:
 	valid_loader=None
 
