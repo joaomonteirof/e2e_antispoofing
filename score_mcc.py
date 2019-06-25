@@ -30,7 +30,7 @@ if __name__ == '__main__':
 	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
-	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_34_CC'], default='lcnn_9', help='Model arch')
+	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC'], default='lcnn_9', help='Model arch')
 	parser.add_argument('--n-classes', type=int, default=-1, metavar='N', help='Number of classes for the mcc case (default: binary classification)')
 	parser.add_argument('--ncoef', type=int, default=90, metavar='N', help='Number of cepstral coefs (default: 90)')
 	parser.add_argument('--init-coef', type=int, default=0, metavar='N', help='First cepstral coefs (default: 0)')
@@ -75,8 +75,8 @@ if __name__ == '__main__':
 		model = model_.lcnn_9layers_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
 	elif args.model == 'lcnn_29_CC':
 		model = model_.lcnn_29layers_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
-	elif args.model == 'resnet_34_CC':
-		model = model_.ResNet_34_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
+	elif args.model == 'resnet_CC':
+		model = model_.ResNet_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
 
 	print('Loading model')
 

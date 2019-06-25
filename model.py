@@ -120,7 +120,7 @@ class PreActBlock(nn.Module):
 		return out
 
 class ResNet(nn.Module):
-	def __init__(self, layers=[3,4,6,3], block=PreActBlock, nclasses=-1):
+	def __init__(self, layers=[2,2,2,2], block=PreActBlock, nclasses=-1):
 		self.in_planes = 16
 		super(ResNet, self).__init__()
 	
@@ -183,7 +183,7 @@ class ResNet(nn.Module):
 		return mu
 
 class ResNet_pca(nn.Module):
-	def __init__(self, layers=[3,4,6,3], block=PreActBlock, nclasses=-1):
+	def __init__(self, layers=[2,2,2,2], block=PreActBlock, nclasses=-1):
 		self.in_planes = 16
 		super(ResNet_pca, self).__init__()
 	
@@ -249,10 +249,10 @@ class ResNet_pca(nn.Module):
 
 		return mu
 
-class ResNet_34_CC(nn.Module):
-	def __init__(self, n_z=256, layers=[3,4,6,3], block=PreActBlock, nclasses=-1, ncoef=90, init_coef=0):
+class ResNet_CC(nn.Module):
+	def __init__(self, n_z=256, layers=[2,2,2,2], block=PreActBlock, nclasses=-1, ncoef=90, init_coef=0):
 		self.in_planes = 16
-		super(ResNet_34_CC, self).__init__()
+		super(ResNet_CC, self).__init__()
 
 		self.ncoef=ncoef
 		self.init_coef=init_coef

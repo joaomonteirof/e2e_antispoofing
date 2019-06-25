@@ -126,7 +126,7 @@ class TrainLoop(object):
 
 		pred = mixture_coef*pred_la + (1.-mixture_coef)*pred_pa
 
-		loss = torch.nn.BCEWithLogitsLoss()(pred, y)
+		loss = torch.nn.BCEWithLogitsLoss()(pred, y)+torch.nn.BCEWithLogitsLoss()(pred_la, y)+torch.nn.BCEWithLogitsLoss()(pred_pa, y)+torch.nn.MSELoss()(2*torch.abs(mixture_coef-0.5), y)
 
 		loss.backward()
 		self.optimizer_la.step()
