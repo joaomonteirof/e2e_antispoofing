@@ -128,12 +128,12 @@ class ResNet(nn.Module):
 		self.bn1 = nn.BatchNorm2d(16)
 		self.activation = nn.ReLU()
 		
-		self.layer1 = self._make_layer(block, 32, layers[0], stride=1)
-		self.layer2 = self._make_layer(block, 64, layers[1], stride=2)
-		self.layer3 = self._make_layer(block, 128, layers[2], stride=2)
-		self.layer4 = self._make_layer(block, 256, layers[3], stride=2)
+		self.layer1 = self._make_layer(block, 64, layers[0], stride=1)
+		self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+		self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
+		self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
 
-		self.conv5 = nn.Conv2d(256, 256, kernel_size=(11,3), stride=(1,1), padding=(0,1), bias=False)
+		self.conv5 = nn.Conv2d(512, 256, kernel_size=(11,3), stride=(1,1), padding=(0,1), bias=False)
 		self.bn5 = nn.BatchNorm2d(256)
 
 		self.fc = nn.Linear(block.expansion*256*2,256)
@@ -191,12 +191,12 @@ class ResNet_pca(nn.Module):
 		self.bn1 = nn.BatchNorm2d(16)
 		self.activation = nn.ReLU()
 		
-		self.layer1 = self._make_layer(block, 32, layers[0], stride=1)
-		self.layer2 = self._make_layer(block, 64, layers[1], stride=2)
-		self.layer3 = self._make_layer(block, 128, layers[2], stride=2)
-		self.layer4 = self._make_layer(block, 256, layers[3], stride=2)
+		self.layer1 = self._make_layer(block, 64, layers[0], stride=1)
+		self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+		self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
+		self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
 
-		self.conv5 = nn.Conv2d(256, 256, kernel_size=(5,3), stride=(1,1), padding=(0,1), bias=False)
+		self.conv5 = nn.Conv2d(512, 256, kernel_size=(5,3), stride=(1,1), padding=(0,1), bias=False)
 		self.bn5 = nn.BatchNorm2d(256)
 
 		self.fc = nn.Linear(block.expansion*256*2,256)
@@ -261,19 +261,19 @@ class ResNet_CC(nn.Module):
 		self.bn1 = nn.BatchNorm2d(16)
 		self.activation = nn.ReLU()
 		
-		self.layer1 = self._make_layer(block, 32, layers[0], stride=1)
-		self.layer2 = self._make_layer(block, 64, layers[1], stride=2)
-		self.layer3 = self._make_layer(block, 128, layers[2], stride=2)
-		self.layer4 = self._make_layer(block, 256, layers[3], stride=2)
+		self.layer1 = self._make_layer(block, 64, layers[0], stride=1)
+		self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+		self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
+		self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
 
-		self.fc_1 = nn.Linear(block.expansion*256*2,512)
-		self.lbn = nn.BatchNorm1d(512)
+		self.fc_1 = nn.Linear(block.expansion*512*2,256)
+		self.lbn = nn.BatchNorm1d(256)
 
-		self.fc_2 = nn.Linear(512, nclasses) if nclasses>2 else nn.Linear(512, 1)
+		self.fc_2 = nn.Linear(256, nclasses) if nclasses>2 else nn.Linear(256, 1)
 
 		self.initialize_params()
 
-		self.attention = SelfAttention(block.expansion*256)
+		self.attention = SelfAttention(block.expansion*512)
 
 	def initialize_params(self):
 
