@@ -129,7 +129,83 @@ class Loader_all(Dataset):
 
 	def get_label(self, utt):
 		prefix = utt.split('-_-')[0]
-		return torch.ones(1) if prefix=='LA' else torch.zeros(1)
+
+		assert (prefix=='LA' or prefix=='PA' prefix=='CLEAN')
+
+		if prefix=='LA':
+			return torch.ones(1)
+		elif prefix=='PA':
+			return torch.zeros(1)
+		elif prefix=='CLEAN':
+			return 0.5*torch.ones(1)
+
+class Loader_all_valid(Dataset):
+
+	def __init__(self, hdf5_la_clean, hdf5_la_attack, hdf5_pa, hdf5_mix, max_nb_frames, n_cycles=1):
+		super(Loader_all_valid, self).__init__()
+		self.hdf5_la_clean = hdf5_la_clean
+		self.hdf5_la_attack = hdf5_la_attack
+		self.hdf5_pa = hdf5_pa
+		self.hdf5_mix = hdf5_mix
+		self.n_cycles = n_cycles
+		self.max_nb_frames = max_nb_frames
+
+		file_1 = h5py.File(self.hdf5_la_clean, 'r')
+		self.idxlist_1 = list(file_1.keys())
+		self.len_1 = len(self.idxlist_1)
+		file_1.close()
+
+		file_2 = h5py.File(self.hdf5_la_attack, 'r')
+		self.idxlist_2 = list(file_2.keys())
+		self.len_2 = len(self.idxlist_2)
+		file_2.close()
+
+		self.open_file_la_clean = None
+		self.open_file_la_attack = None
+		self.open_file_pa = None
+		self.open_file_mix = None
+
+		print('Number of genuine, spoofing, and total recordings: {}, {}, {}'.format(self.len_1, self.len_2, self.len_1+self.len_2))
+
+	def __getitem__(self, index):
+
+		if not self.open_file_la_clean: self.open_file_la_clean = h5py.File(self.hdf5_la_clean, 'r')
+		if not self.open_file_la_attack: self.open_file_la_attack = h5py.File(self.hdf5_la_attack, 'r')
+		if not self.open_file_pa: self.open_file_pa = h5py.File(self.hdf5_pa, 'r')
+		if not self.open_file_mix: self.open_file_mix = h5py.File(self.hdf5_mix, 'r')
+
+		index_1 = index % self.len_1
+		utt_clean = self.idxlist_1[index_1]
+
+		utt_clean_la = self.prep_utterance( self.open_file_la_clean[utt_clean][0] )
+		utt_clean_pa = self.prep_utterance( self.open_file_pa[utt_clean][0] )
+		utt_clean_mix = self.prep_utterance( self.open_file_mix[utt_clean][0] )
+
+		index_2 = index % self.len_2
+		utt_attack = self.idxlist_2[index_2]
+
+		utt_attack_la = self.prep_utterance( self.open_file_la_attack[utt_attack][0] )
+		utt_attack_pa = self.prep_utterance( self.open_file_pa[utt_attack][0] )
+		utt_attack_mix = self.prep_utterance( self.open_file_mix[utt_attack][0] )
+
+		return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.zeros(1), torch.ones(1)
+
+	def __len__(self):
+		return self.n_cycles*np.maximum(self.len_1, self.len_2)
+
+	def prep_utterance(self, data):
+
+		data = np.expand_dims(data, 0)
+
+		if data.shape[2]>self.max_nb_frames:
+			ridx = np.random.randint(0, data.shape[2]-self.max_nb_frames)
+			data_ = data[:, :, ridx:(ridx+self.max_nb_frames)]
+		else:
+			mul = int(np.ceil(self.max_nb_frames/data.shape[0]))
+			data_ = np.tile(data, (1, 1, mul))
+			data_ = data_[:, :, :self.max_nb_frames]
+
+		return data_
 
 class Loader_mcc(Dataset):
 

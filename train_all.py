@@ -6,7 +6,7 @@ import torch.optim as optim
 import torch.utils.data
 import model as model_
 import numpy as np
-from data_load import Loader_all
+from data_load import Loader_all, Loader_all_valid
 
 from utils import *
 
@@ -59,7 +59,7 @@ if args.cuda:
 train_dataset = Loader_all(hdf5_la_clean = args.train_la_path+'train_clean.hdf', hdf5_la_attack = args.train_la_path+'train_attack.hdf', hdf5_pa=args.train_pa_hdf, hdf5_mix=args.train_mix_hdf, max_nb_frames = args.n_frames, n_cycles=args.n_cycles)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 
-valid_dataset = Loader_all(hdf5_la_clean = args.valid_la_path+'valid_clean.hdf', hdf5_la_attack = args.valid_la_path+'valid_attack.hdf', hdf5_pa=args.valid_pa_hdf, hdf5_mix=args.valid_mix_hdf, max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles)
+valid_dataset = Loader_all_valid(hdf5_la_clean = args.valid_la_path+'valid_clean.hdf', hdf5_la_attack = args.valid_la_path+'valid_attack.hdf', hdf5_pa=args.valid_pa_hdf, hdf5_mix=args.valid_mix_hdf, max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles)
 valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.valid_batch_size, shuffle=False, worker_init_fn=set_np_randomseed)
 
 if args.model_la == 'lstm':
