@@ -51,12 +51,12 @@ if __name__ == '__main__':
 		clean_hdf = h5py.File(clean_, 'a')
 		spoof_hdf = h5py.File(spoof_, 'a')
 
-	data_clean = { ('CLEAN+-_-'+k):m for k,m in read_mat_scp(args.path_to_la_data_clean) }
-	data_spoof = { ('LA+-_-'+k):m for k,m in read_mat_scp(args.path_to_la_data_spoof) }
+	data_clean = { ('CLEAN-_-'+k):m for k,m in read_mat_scp(args.path_to_la_data_clean) }
+	data_spoof = { ('LA-_-'+k):m for k,m in read_mat_scp(args.path_to_la_data_spoof) }
 	for k,m in read_mat_scp(args.path_to_pa_data_clean):
-		data_clean[('CLEAN+-_-'+k)]=m
+		data_clean[('CLEAN-_-'+k)]=m
 	for k,m in read_mat_scp(args.path_to_pa_data_spoof):
-		data_spoof[('PA+-_-'+k)]=m
+		data_spoof[('PA-_-'+k)]=m
 
 
 	if args.all_in_one:

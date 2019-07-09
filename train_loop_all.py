@@ -111,7 +111,7 @@ class TrainLoop(object):
 		utterances_pa = torch.cat([utterances_clean_pa, utterances_attack_pa],0)
 		utterances_mix = torch.cat([utterances_clean_mix, utterances_attack_mix],0)
 		y = torch.cat([y_clean, y_attack],0).squeeze()
-		y_lapa = torch.cat([y_clean_lapa, y_attack_lapa],0).squeeze()
+		y_lapa = torch.cat([y_lapa_clean, y_lapa_attack],0).squeeze()
 
 		ridx = np.random.randint(utterances_la.size(3)//2, utterances_la.size(3))
 		utterances_la = utterances_la[:,:,:,:ridx]

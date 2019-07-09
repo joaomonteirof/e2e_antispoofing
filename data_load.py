@@ -130,7 +130,7 @@ class Loader_all(Dataset):
 	def get_label(self, utt):
 		prefix = utt.split('-_-')[0]
 
-		assert (prefix=='LA' or prefix=='PA' prefix=='CLEAN')
+		assert (prefix=='LA' or prefix=='PA' or prefix=='CLEAN')
 
 		if prefix=='LA':
 			return torch.ones(1)
