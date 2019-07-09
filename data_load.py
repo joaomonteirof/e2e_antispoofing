@@ -95,16 +95,20 @@ class Loader_all(Dataset):
 		if not self.open_file_mix: self.open_file_mix = h5py.File(self.hdf5_mix, 'r')
 
 		index_1 = index % self.len_1
-		utt_clean_la = self.prep_utterance( self.open_file_la_clean[self.idxlist_1[index_1]][0] )
-		utt_clean_pa = self.prep_utterance( self.open_file_pa[self.idxlist_1[index_1]][0] )
-		utt_clean_mix = self.prep_utterance( self.open_file_mix[self.idxlist_1[index_1]][0] )
+		utt_clean = self.idxlist_1[index_1]
+
+		utt_clean_la = self.prep_utterance( self.open_file_la_clean[utt_clean][0] )
+		utt_clean_pa = self.prep_utterance( self.open_file_pa[utt_clean][0] )
+		utt_clean_mix = self.prep_utterance( self.open_file_mix[utt_clean][0] )
 
 		index_2 = index % self.len_2
-		utt_attack_la = self.prep_utterance( self.open_file_la_attack[self.idxlist_2[index_2]][0] )
-		utt_attack_pa = self.prep_utterance( self.open_file_pa[self.idxlist_2[index_2]][0] )
-		utt_attack_mix = self.prep_utterance( self.open_file_mix[self.idxlist_2[index_2]][0] )
+		utt_attack = self.idxlist_2[index_2]
 
-		return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.zeros(1), torch.ones(1)
+		utt_attack_la = self.prep_utterance( self.open_file_la_attack[utt_attack][0] )
+		utt_attack_pa = self.prep_utterance( self.open_file_pa[utt_attack][0] )
+		utt_attack_mix = self.prep_utterance( self.open_file_mix[utt_attack][0] )
+
+		return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.zeros(1), torch.ones(1), self.get_label(utt_clean), self.get_label(utt_attack)
 
 	def __len__(self):
 		return self.n_cycles*np.maximum(self.len_1, self.len_2)
@@ -122,6 +126,10 @@ class Loader_all(Dataset):
 			data_ = data_[:, :, :self.max_nb_frames]
 
 		return data_
+
+	def get_label(self, utt):
+		prefix = utt.split('-_-')[0]
+		return torch.ones(1) if prefix=='LA' else torch.zeros(1)
 
 class Loader_mcc(Dataset):
 

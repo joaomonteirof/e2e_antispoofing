@@ -9,10 +9,10 @@ from kaldi_io import read_mat_scp
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Train data preparation and storage in .hdf')
-	parser.add_argument('--path-to-data-clean', type=str, default='./data_clean/feats.scp', metavar='Path', help='Path to feats.scp')
-	parser.add_argument('--path-to-data-spoof', type=str, default='./data_clean/feats.scp', metavar='Path', help='Path to feats.scp')
-	parser.add_argument('--path-to-more-data-clean', type=str, default='./more_data_clean/feats.scp', metavar='Path', help='Path to feats.scp')
-	parser.add_argument('--path-to-more-data-spoof', type=str, default='./more_data_spoof/feats.scp', metavar='Path', help='Path to feats.scp')
+	parser.add_argument('--path-to-la-data-clean', type=str, default='./la_data_clean/feats.scp', metavar='Path', help='Path to feats.scp')
+	parser.add_argument('--path-to-la-data-spoof', type=str, default='./la_data_spoof/feats.scp', metavar='Path', help='Path to feats.scp')
+	parser.add_argument('--path-to-pa-data-clean', type=str, default='./pa_data_clean/feats.scp', metavar='Path', help='Path to feats.scp')
+	parser.add_argument('--path-to-pa-data-spoof', type=str, default='./pa_data_spoof/feats.scp', metavar='Path', help='Path to feats.scp')
 	parser.add_argument('--all-in-one', action='store_true', default=False, help='Dumps all data into single hdf rather than separate depending on clean/spoof')
 	parser.add_argument('--out-path', type=str, default='./', metavar='Path', help='Path to output hdf file')
 	parser.add_argument('--prefix', type=str, default=None)
@@ -51,12 +51,12 @@ if __name__ == '__main__':
 		clean_hdf = h5py.File(clean_, 'a')
 		spoof_hdf = h5py.File(spoof_, 'a')
 
-	data_clean = { k:m for k,m in read_mat_scp(args.path_to_data_clean) }
-	data_spoof = { k:m for k,m in read_mat_scp(args.path_to_data_spoof) }
-	for k,m in read_mat_scp(args.path_to_more_data_clean):
-		data_clean[k]=m
-	for k,m in read_mat_scp(args.path_to_more_data_spoof):
-		data_spoof[k]=m
+	data_clean = { ('LA+-_-'+k):m for k,m in read_mat_scp(args.path_to_la_data_clean) }
+	data_spoof = { ('LA+-_-'+k):m for k,m in read_mat_scp(args.path_to_la_data_spoof) }
+	for k,m in read_mat_scp(args.path_to_pa_data_clean):
+		data_clean[('PA+-_-'+k)]=m
+	for k,m in read_mat_scp(args.path_to_pa_data_spoof):
+		data_spoof[('PA+-_-'+k)]=m
 
 
 	if args.all_in_one:

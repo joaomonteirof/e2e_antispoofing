@@ -105,12 +105,13 @@ class TrainLoop(object):
 		self.optimizer_pa.zero_grad()
 		self.optimizer_mix.zero_grad()
 
-		utterances_clean_la, utterances_clean_pa, utterances_clean_mix, utterances_attack_la, utterances_attack_pa, utterances_attack_mix, y_clean, y_attack = batch
+		utterances_clean_la, utterances_clean_pa, utterances_clean_mix, utterances_attack_la, utterances_attack_pa, utterances_attack_mix, y_clean, y_attack, y_lapa_clean, y_lapa_attack = batch
 
 		utterances_la = torch.cat([utterances_clean_la, utterances_attack_la],0)
 		utterances_pa = torch.cat([utterances_clean_pa, utterances_attack_pa],0)
 		utterances_mix = torch.cat([utterances_clean_mix, utterances_attack_mix],0)
 		y = torch.cat([y_clean, y_attack],0).squeeze()
+		y_lapa = torch.cat([y_clean_lapa, y_attack_lapa],0).squeeze()
 
 		ridx = np.random.randint(utterances_la.size(3)//2, utterances_la.size(3))
 		utterances_la = utterances_la[:,:,:,:ridx]
@@ -118,7 +119,7 @@ class TrainLoop(object):
 		utterances_mix = utterances_mix[:,:,:,:ridx]
 
 		if self.cuda_mode:
-			utterances_la, utterances_pa, utterances_mix, y = utterances_la.to(self.device), utterances_pa.to(self.device), utterances_mix.to(self.device), y.to(self.device)
+			utterances_la, utterances_pa, utterances_mix, y, y_lapa = utterances_la.to(self.device), utterances_pa.to(self.device), utterances_mix.to(self.device), y.to(self.device), y_lapa.to(self.device)
 
 		pred_la = self.model_la.forward(utterances_la).squeeze()
 		pred_pa = self.model_pa.forward(utterances_pa).squeeze()
@@ -126,7 +127,7 @@ class TrainLoop(object):
 
 		pred = mixture_coef*pred_la + (1.-mixture_coef)*pred_pa
 
-		loss = torch.nn.BCEWithLogitsLoss()(pred, y)+torch.nn.BCEWithLogitsLoss()(pred_la, y)+torch.nn.BCEWithLogitsLoss()(pred_pa, y)
+		loss = torch.nn.BCEWithLogitsLoss()(pred, y)+torch.nn.BCEWithLogitsLoss()(pred_la, y)+torch.nn.BCEWithLogitsLoss()(pred_pa, y)+torch.nn.BCELoss()(mixture_coef, y_lapa)
 
 		loss.backward()
 		self.optimizer_la.step()
