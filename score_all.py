@@ -202,7 +202,7 @@ if __name__ == '__main__':
 			score_all = 1.-torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).squeeze().cpu().item()
 			score_la = 1.-torch.sigmoid(pred_la).squeeze().cpu().item()
 			score_pa = 1.-torch.sigmoid(pred_pa).squeeze().cpu().item()
-			score_mix = 2*abs(mixture_coef.cpu().item()-0.5)
+			score_mix = 1.-2*abs(mixture_coef.cpu().item()-0.5)
 			score_fusion = (score_all+score_la+score_pa+score_mix)/4.
 
 			scores['all'].append(score_all)
