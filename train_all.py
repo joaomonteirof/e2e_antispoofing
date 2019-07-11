@@ -15,6 +15,7 @@ parser = argparse.ArgumentParser(description='Speaker embbedings with contrastiv
 parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC'], default='lcnn_29_CC', help='Model arch')
 parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC'], default='lcnn_9_prodspec', help='Model arch')
 parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--train-mode', choices=['mix', 'lapa', 'independent'], default='mix', help='Train mode')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--valid-batch-size', type=int, default=64, metavar='N', help='input batch size for validation (default: 64)')
 parser.add_argument('--epochs', type=int, default=500, metavar='N', help='number of epochs to train (default: 500)')
@@ -179,10 +180,11 @@ optimizer_la = optim.SGD(model_la.parameters(), lr=args.lr, momentum=args.moment
 optimizer_pa = optim.SGD(model_pa.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 optimizer_mix = optim.SGD(model_mix.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 
-trainer = TrainLoop(model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience=args.patience, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
+trainer = TrainLoop(model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience=args.patience, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
 
 print('Cuda Mode: {}'.format(args.cuda))
 print('Device: {}'.format(device))
+print('Train mode: {}'.format(args.train_mode))
 print('Selected models (LA, PA, MIX): {}, {}, {}'.format(args.model_la, args.model_pa, args.model_mix))
 print('Batch size: {}'.format(args.batch_size))
 print('LR: {}'.format(args.lr))
