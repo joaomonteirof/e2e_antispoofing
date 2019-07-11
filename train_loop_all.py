@@ -76,15 +76,15 @@ class TrainLoop(object):
 			self.history['train_pa'].append(train_pa_epoch/(t+1))
 			self.history['train_mix'].append(train_mix_epoch/(t+1))
 
-			print('Total train loss, loss_all,  loss_la,  loss_pa,  loss_mix: {:0.4f}'.format(self.history['train_loss'][-1]))
+			print('Total train loss, loss_all,  loss_la,  loss_pa,  loss_mix: {:0.4f}, {:0.4f}, {:0.4f}, {:0.4f}, {:0.4f}'.format(self.history['train_loss'][-1], self.history['train_all'][-1], self.history['train_la'][-1], self.history['train_pa'][-1], self.history['train_mix'][-1]))
 
-			scores_all, scores_la, scores_pa, scores_mix, labels = None, None
+			scores_all, scores_la, scores_pa, scores_mix, labels = None, None, None, None, None
 
 			if self.train_mode=='mix':
 
 				for t, batch in enumerate(self.valid_loader):
 
-						scores_all_batch, scores_la_batch, scores_pa_batch, scores_mix_batch, labels_batch = self.valid(batch)
+					scores_all_batch, scores_la_batch, scores_pa_batch, scores_mix_batch, labels_batch = self.valid(batch)
 					try:
 						scores_all = np.concatenate([scores_all, scores_all_batch], 0)
 						scores_la = np.concatenate([scores_la, scores_la_batch], 0)
@@ -92,7 +92,7 @@ class TrainLoop(object):
 						scores_mix = np.concatenate([scores_mix, scores_mix_batch], 0)
 						labels = np.concatenate([labels, labels_batch], 0)
 					except:
-						scores_all, scores_la, scores_pa, scores_mix, labels = scores_batch_all, scores_batch_la, scores_batch_pa, scores_batch_mix, labels_batch
+						scores_all, scores_la, scores_pa, scores_mix, labels = scores_all_batch, scores_la_batch, scores_pa_batch, scores_mix_batch, labels_batch
 
 				self.history['valid_all'].append(compute_eer(labels, scores_all))
 				self.history['valid_la'].append(compute_eer(labels, scores_la))
@@ -105,14 +105,14 @@ class TrainLoop(object):
 
 				for t, batch in enumerate(self.valid_loader):
 
-						scores_la_batch, scores_pa_batch, scores_mix_batch, labels_batch = self.valid(batch)
+					scores_la_batch, scores_pa_batch, scores_mix_batch, labels_batch = self.valid(batch)
 					try:
 						scores_la = np.concatenate([scores_la, scores_la_batch], 0)
 						scores_pa = np.concatenate([scores_pa, scores_pa_batch], 0)
 						scores_mix = np.concatenate([scores_mix, scores_mix_batch], 0)
 						labels = np.concatenate([labels, labels_batch], 0)
 					except:
-						scores_la, scores_pa, scores_mix, labels = scores_batch_all, scores_batch_la, scores_batch_pa, scores_batch_mix, labels_batch
+						scores_la, scores_pa, scores_mix, labels = scores_la_batch, scores_pa_batch, scores_mix_batch, labels_batch
 
 				self.history['valid_la'].append(compute_eer(labels, scores_la))
 				self.history['valid_pa'].append(compute_eer(labels, scores_pa))
@@ -178,13 +178,13 @@ class TrainLoop(object):
 			loss_mix = torch.nn.BCELoss()(mixture_coef, y_lapa)
 
 		elif self.train_mode == 'lapa':
-			loss_full_mix = torch.zeros(1)
-			loss_la = torch.nn.BCELoss()(pred_la, y_lapa)
-			loss_pa = torch.nn.BCELoss()(pred_pa, y_lapa)
-			loss_mix = torch.nn.BCELoss()(pred_mix, y_lapa)
+			loss_full_mix = torch.zeros(1).to(self.device)
+			loss_la = torch.nn.BCEWithLogitsLoss()(pred_la, y_lapa)
+			loss_pa = torch.nn.BCEWithLogitsLoss()(pred_pa, y_lapa)
+			loss_mix = torch.nn.BCEWithLogitsLoss()(pred_mix, y_lapa)
 
 		elif self.train_mode == 'independent':
-			loss_full_mix = torch.zeros(1)
+			loss_full_mix = torch.zeros(1).to(self.device)
 			loss_la = torch.nn.BCEWithLogitsLoss()(pred_la, y)
 			loss_pa = torch.nn.BCEWithLogitsLoss()(pred_pa, y)
 			loss_mix = torch.nn.BCEWithLogitsLoss()(pred_mix, y)
