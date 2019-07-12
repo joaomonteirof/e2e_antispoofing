@@ -130,7 +130,7 @@ class TrainLoop(object):
 
 			self.cur_epoch += 1
 
-			if self.cur_epoch % save_every == 0 or self.history['valid_loss'][-1] < np.min([np.inf]+self.history['valid_loss'][:-1]):
+			if self.cur_epoch % save_every == 0 or self.history['valid_la'][-1] < np.min([np.inf]+self.history['valid_la'][:-1]) or self.history['valid_pa'][-1] < np.min([np.inf]+self.history['valid_pa'][:-1]) or self.history['valid_mix'][-1] < np.min([np.inf]+self.history['valid_mix'][:-1]):
 				self.checkpointing()
 
 		print('Training done!')
