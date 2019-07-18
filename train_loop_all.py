@@ -36,7 +36,7 @@ class TrainLoop(object):
 		self.cur_epoch = 0
 		self.device = next(self.model_la.parameters()).device
 		self.train_mode = train_mode
-		logger = self.logger
+		self.logger = logger
 
 		self.history = {'train_loss': [], 'train_loss_batch': [], 'train_all': [], 'train_all_batch': [], 'train_la': [], 'train_la_batch': [], 'train_pa': [], 'train_pa_batch': [], 'train_mix': [], 'train_mix_batch': [], 'valid_la': [], 'valid_pa': [], 'valid_mix': []}
 

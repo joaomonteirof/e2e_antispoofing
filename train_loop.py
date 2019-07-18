@@ -29,7 +29,7 @@ class TrainLoop(object):
 		self.total_iters = 0
 		self.cur_epoch = 0
 		self.device = next(self.model.parameters()).device
-		logger = self.logger
+		self.logger = logger
 
 		if self.valid_loader is not None:
 			self.history = {'train_loss': [], 'train_loss_batch': [], 'valid_loss': []}
