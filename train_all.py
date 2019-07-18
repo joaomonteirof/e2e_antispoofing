@@ -7,7 +7,7 @@ import torch.utils.data
 import model as model_
 import numpy as np
 from data_load import Loader_all, Loader_all_valid
-
+from torch.utils.tensorboard import SummaryWriter
 from utils import *
 
 # Training settings
@@ -25,6 +25,7 @@ parser.add_argument('--l2', type=float, default=1e-5, metavar='L2', help='Weight
 parser.add_argument('--patience', type=int, default=5, metavar='N', help='number of epochs without improvement to wait before reducing lr (default: 5)')
 parser.add_argument('--checkpoint-epoch', type=int, default=None, metavar='N', help='epoch to load for checkpointing. If None, training starts from scratch')
 parser.add_argument('--checkpoint-path', type=str, default=None, metavar='Path', help='Path for checkpointing')
+parser.add_argument('--logdir', type=str, default=None, metavar='Path', help='Path for checkpointing')
 parser.add_argument('--pretrained-la-path', type=str, default=None, metavar='Path', help='Path for pre trained model')
 parser.add_argument('--pretrained-pa-path', type=str, default=None, metavar='Path', help='Path for pre trained model')
 parser.add_argument('--pretrained-mix-path', type=str, default=None, metavar='Path', help='Path for pre trained model')
@@ -52,6 +53,11 @@ if args.cuda:
 	device = get_freer_gpu()
 else:
 	device = torch.device('cpu')
+
+if args.logdir:
+	writer = SummaryWriter(log_dir=args.logdir)
+else:
+	writer = None
 
 torch.manual_seed(args.seed)
 if args.cuda:
@@ -171,16 +177,15 @@ if args.pretrained_mix_path is not None:
 		print("Unexpected error:", sys.exc_info()[0])
 		raise
 
-if args.cuda:
-	model_la = model_la.to(device)
-	model_pa = model_pa.to(device)
-	model_mix = model_mix.to(device)
+model_la = model_la.to(device)
+model_pa = model_pa.to(device)
+model_mix = model_mix.to(device)
 
 optimizer_la = optim.SGD(model_la.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 optimizer_pa = optim.SGD(model_pa.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 optimizer_mix = optim.SGD(model_mix.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 
-trainer = TrainLoop(model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience=args.patience, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
+trainer = TrainLoop(model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience=args.patience, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, logger=writer)
 
 print('Cuda Mode: {}'.format(args.cuda))
 print('Device: {}'.format(device))

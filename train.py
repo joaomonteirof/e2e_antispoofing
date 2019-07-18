@@ -8,7 +8,7 @@ import torch.utils.data
 import model as model_
 import numpy as np
 from data_load import Loader, Loader_mcc
-
+from torch.utils.tensorboard import SummaryWriter
 from utils import *
 
 # Training settings
@@ -24,6 +24,7 @@ parser.add_argument('--patience', type=int, default=5, metavar='N', help='number
 parser.add_argument('--checkpoint-epoch', type=int, default=None, metavar='N', help='epoch to load for checkpointing. If None, training starts from scratch')
 parser.add_argument('--checkpoint-path', type=str, default=None, metavar='Path', help='Path for checkpointing')
 parser.add_argument('--pretrained-path', type=str, default=None, metavar='Path', help='Path for pre trained model')
+parser.add_argument('--logdir', type=str, default=None, metavar='Path', help='Path for checkpointing')
 parser.add_argument('--train-hdf-path', type=str, default='./data/train.hdf', metavar='Path', help='Path to hdf data')
 parser.add_argument('--valid-hdf-path', type=str, default=None, metavar='Path', help='Path to hdf data')
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
@@ -42,6 +43,13 @@ args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
 if args.cuda:
 	device = get_freer_gpu()
+else:
+	device = torch.device('cpu')
+
+if args.logdir:
+	writer = SummaryWriter(log_dir=args.logdir)
+else:
+	writer = None
 
 torch.manual_seed(args.seed)
 if args.cuda:
@@ -101,15 +109,14 @@ if args.pretrained_path is not None:
 		print("Unexpected error:", sys.exc_info()[0])
 		raise
 
-if args.cuda:
-	model = model.to(device)
+model = model.to(device)
 
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 
 if args.n_classes>2:
 	trainer = TrainLoop_mcc(model, optimizer, train_loader, valid_loader, patience=args.patience, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
 else:
-	trainer = TrainLoop(model, optimizer, train_loader, valid_loader, patience=args.patience, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
+	trainer = TrainLoop(model, optimizer, train_loader, valid_loader, patience=args.patience, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, logger=writer)
 
 print('Cuda Mode: {}'.format(args.cuda))
 print('Device: {}'.format(device))

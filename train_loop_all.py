@@ -10,7 +10,7 @@ from utils import compute_eer
 
 class TrainLoop(object):
 
-	def __init__(self, model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience, train_mode, checkpoint_path=None, checkpoint_epoch=None, cuda=True):
+	def __init__(self, model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience, train_mode, checkpoint_path=None, checkpoint_epoch=None, cuda=True, logger=None):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -36,6 +36,7 @@ class TrainLoop(object):
 		self.cur_epoch = 0
 		self.device = next(self.model_la.parameters()).device
 		self.train_mode = train_mode
+		logger = self.logger
 
 		self.history = {'train_loss': [], 'train_loss_batch': [], 'train_all': [], 'train_all_batch': [], 'train_la': [], 'train_la_batch': [], 'train_pa': [], 'train_pa_batch': [], 'train_mix': [], 'train_mix_batch': [], 'valid_la': [], 'valid_pa': [], 'valid_mix': []}
 
@@ -69,6 +70,12 @@ class TrainLoop(object):
 				train_pa_epoch+=train_pa
 				train_mix_epoch+=train_mix
 				self.total_iters += 1
+				if self.logger:
+					self.logger.add_scalar('Total train loss', train_loss)
+					self.logger.add_scalar('Train Loss mixture', train_all)
+					self.logger.add_scalar('Train Loss LA', train_la)
+					self.logger.add_scalar('Train Loss PA', train_pa)
+					self.logger.add_scalar('Train Loss MIX', train_mix)
 
 			self.history['train_loss'].append(train_loss_epoch/(t+1))
 			self.history['train_all'].append(train_all_epoch/(t+1))
@@ -99,6 +106,11 @@ class TrainLoop(object):
 				self.history['valid_pa'].append(compute_eer(labels, scores_pa))
 				self.history['valid_mix'].append(compute_eer(labels, scores_mix))
 
+				if self.logger:
+					self.logger.add_scalar('Valid EER mixture', self.history['valid_all'][-1])
+					self.logger.add_scalar('Best valid EER mixture', np.min(self.history['valid_all']))
+					self.logger.add_pr_curve('Valid. ROC mixture', labels=labels, predictions=scores_all)
+
 				print('ALL: Current validation loss, best validation loss, and epoch: {:0.4f}, {:0.4f}, {}'.format(self.history['valid_all'][-1], np.min(self.history['valid_all']), 1+np.argmin(self.history['valid_all'])))
 
 			else:
@@ -117,6 +129,17 @@ class TrainLoop(object):
 				self.history['valid_la'].append(compute_eer(labels, scores_la))
 				self.history['valid_pa'].append(compute_eer(labels, scores_pa))
 				self.history['valid_mix'].append(compute_eer(labels, scores_mix))
+
+			if self.logger:
+				self.logger.add_scalar('Valid EER LA', self.history['valid_la'][-1])
+				self.logger.add_scalar('Best valid EER LA', np.min(self.history['valid_la']))
+				self.logger.add_pr_curve('Valid. ROC LA', labels=labels, predictions=scores_la)
+				self.logger.add_scalar('Valid EER PA', self.history['valid_pa'][-1])
+				self.logger.add_scalar('Best valid EER PA', np.min(self.history['valid_pa']))
+				self.logger.add_pr_curve('Valid. ROC PA', labels=labels, predictions=scores_pa)
+				self.logger.add_scalar('Valid EER MIX', self.history['valid_mix'][-1])
+				self.logger.add_scalar('Best valid EER MIX', np.min(self.history['valid_mix']))
+				self.logger.add_pr_curve('Valid. ROC MIX', labels=labels, predictions=scores_mix)
 
 			print('LA: Current validation loss, best validation loss, and epoch: {:0.4f}, {:0.4f}, {}'.format(self.history['valid_la'][-1], np.min(self.history['valid_la']), 1+np.argmin(self.history['valid_la'])))
 			print('PA: Current validation loss, best validation loss, and epoch: {:0.4f}, {:0.4f}, {}'.format(self.history['valid_pa'][-1], np.min(self.history['valid_pa']), 1+np.argmin(self.history['valid_pa'])))

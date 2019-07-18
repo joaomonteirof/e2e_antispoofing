@@ -10,7 +10,7 @@ from utils import compute_eer
 
 class TrainLoop(object):
 
-	def __init__(self, model, optimizer, train_loader, valid_loader, patience, checkpoint_path=None, checkpoint_epoch=None, cuda=True):
+	def __init__(self, model, optimizer, train_loader, valid_loader, patience, checkpoint_path=None, checkpoint_epoch=None, cuda=True, logger=None):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -29,6 +29,7 @@ class TrainLoop(object):
 		self.total_iters = 0
 		self.cur_epoch = 0
 		self.device = next(self.model.parameters()).device
+		logger = self.logger
 
 		if self.valid_loader is not None:
 			self.history = {'train_loss': [], 'train_loss_batch': [], 'valid_loss': []}
@@ -50,6 +51,8 @@ class TrainLoop(object):
 				self.history['train_loss_batch'].append(train_loss)
 				train_loss_epoch+=train_loss
 				self.total_iters += 1
+				if self.logger:
+					self.logger.add_scalar('Train Loss', train_loss)
 
 			self.history['train_loss'].append(train_loss_epoch/(t+1))
 
@@ -69,6 +72,11 @@ class TrainLoop(object):
 						scores, labels = scores_batch, labels_batch
 
 				self.history['valid_loss'].append(compute_eer(labels, scores))
+
+				if self.logger:
+					self.logger.add_scalar('Valid EER', self.history['valid_loss'][-1], np.min(self.history['valid_loss']))
+					self.logger.add_scalar('Best valid EER', np.min(self.history['valid_loss']))
+					self.logger.add_pr_curve('Valid. ROC', labels=labels, predictions=scores)
 
 				print('Current validation loss, best validation loss, and epoch: {:0.4f}, {:0.4f}, {}'.format(self.history['valid_loss'][-1], np.min(self.history['valid_loss']), 1+np.argmin(self.history['valid_loss'])))
 
