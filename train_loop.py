@@ -50,9 +50,9 @@ class TrainLoop(object):
 				train_loss = self.train_step(batch)
 				self.history['train_loss_batch'].append(train_loss)
 				train_loss_epoch+=train_loss
-				self.total_iters += 1
 				if self.logger:
-					self.logger.add_scalar('Train Loss', train_loss, self.cur_epoch*t+t)
+					self.logger.add_scalar('Train Loss', train_loss, self.total_iters)
+				self.total_iters += 1
 
 			self.history['train_loss'].append(train_loss_epoch/(t+1))
 
