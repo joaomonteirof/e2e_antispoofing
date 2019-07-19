@@ -69,13 +69,13 @@ class TrainLoop(object):
 				train_la_epoch+=train_la
 				train_pa_epoch+=train_pa
 				train_mix_epoch+=train_mix
-				self.total_iters += 1
 				if self.logger:
-					self.logger.add_scalar('Total train loss', train_loss, self.cur_epoch*t+t)
-					self.logger.add_scalar('Train Loss mixture', train_all, self.cur_epoch*t+t)
-					self.logger.add_scalar('Train Loss LA', train_la, self.cur_epoch*t+t)
-					self.logger.add_scalar('Train Loss PA', train_pa, self.cur_epoch*t+t)
-					self.logger.add_scalar('Train Loss MIX', train_mix, self.cur_epoch*t+t)
+					self.logger.add_scalar('Total train loss', train_loss, self.total_iters)
+					self.logger.add_scalar('Train Loss mixture', train_all, self.total_iters)
+					self.logger.add_scalar('Train Loss LA', train_la, self.total_iters)
+					self.logger.add_scalar('Train Loss PA', train_pa, self.total_iters)
+					self.logger.add_scalar('Train Loss MIX', train_mix, self.total_iters)
+				self.total_iters += 1
 
 			self.history['train_loss'].append(train_loss_epoch/(t+1))
 			self.history['train_all'].append(train_all_epoch/(t+1))
