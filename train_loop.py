@@ -76,7 +76,7 @@ class TrainLoop(object):
 				if self.logger:
 					self.logger.add_scalar('Valid EER', self.history['valid_loss'][-1], np.min(self.history['valid_loss']), self.cur_epoch)
 					self.logger.add_scalar('Best valid EER', np.min(self.history['valid_loss']), self.cur_epoch)
-					self.logger.add_pr_curve('Valid. ROC', labels=labels, predictions=scores, self.cur_epoch)
+					self.logger.add_pr_curve('Valid. ROC', labels=labels, predictions=scores, global_step=self.cur_epoch)
 
 				print('Current validation loss, best validation loss, and epoch: {:0.4f}, {:0.4f}, {}'.format(self.history['valid_loss'][-1], np.min(self.history['valid_loss']), 1+np.argmin(self.history['valid_loss'])))
 

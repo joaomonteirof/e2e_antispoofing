@@ -109,7 +109,7 @@ class TrainLoop(object):
 				if self.logger:
 					self.logger.add_scalar('Valid EER mixture', self.history['valid_all'][-1], self.cur_epoch)
 					self.logger.add_scalar('Best valid EER mixture', np.min(self.history['valid_all']), self.cur_epoch)
-					self.logger.add_pr_curve('Valid. ROC mixture', labels=labels, predictions=scores_all, self.cur_epoch)
+					self.logger.add_pr_curve('Valid. ROC mixture', labels=labels, predictions=scores_all, global_step=self.cur_epoch)
 
 				print('ALL: Current validation loss, best validation loss, and epoch: {:0.4f}, {:0.4f}, {}'.format(self.history['valid_all'][-1], np.min(self.history['valid_all']), 1+np.argmin(self.history['valid_all'])))
 
@@ -133,13 +133,13 @@ class TrainLoop(object):
 			if self.logger:
 				self.logger.add_scalar('Valid EER LA', self.history['valid_la'][-1], self.cur_epoch)
 				self.logger.add_scalar('Best valid EER LA', np.min(self.history['valid_la']), self.cur_epoch)
-				self.logger.add_pr_curve('Valid. ROC LA', labels=labels, predictions=scores_la, self.cur_epoch)
+				self.logger.add_pr_curve('Valid. ROC LA', labels=labels, predictions=scores_la, global_step=self.cur_epoch)
 				self.logger.add_scalar('Valid EER PA', self.history['valid_pa'][-1], self.cur_epoch)
 				self.logger.add_scalar('Best valid EER PA', np.min(self.history['valid_pa']), self.cur_epoch)
-				self.logger.add_pr_curve('Valid. ROC PA', labels=labels, predictions=scores_pa, self.cur_epoch)
+				self.logger.add_pr_curve('Valid. ROC PA', labels=labels, predictions=scores_pa, global_step=self.cur_epoch)
 				self.logger.add_scalar('Valid EER MIX', self.history['valid_mix'][-1], self.cur_epoch)
 				self.logger.add_scalar('Best valid EER MIX', np.min(self.history['valid_mix']), self.cur_epoch)
-				self.logger.add_pr_curve('Valid. ROC MIX', labels=labels, predictions=scores_mix, self.cur_epoch)
+				self.logger.add_pr_curve('Valid. ROC MIX', labels=labels, predictions=scores_mix, global_step=self.cur_epoch)
 
 			print('LA: Current validation loss, best validation loss, and epoch: {:0.4f}, {:0.4f}, {}'.format(self.history['valid_la'][-1], np.min(self.history['valid_la']), 1+np.argmin(self.history['valid_la'])))
 			print('PA: Current validation loss, best validation loss, and epoch: {:0.4f}, {:0.4f}, {}'.format(self.history['valid_pa'][-1], np.min(self.history['valid_pa']), 1+np.argmin(self.history['valid_pa'])))
