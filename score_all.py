@@ -186,7 +186,7 @@ if __name__ == '__main__':
 
 				pred_la = model_la.forward(feats_la).squeeze()
 				pred_pa = model_pa.forward(feats_pa).squeeze()
-				pred_mix = model_pa.forward(feats_mix).squeeze()
+				pred_mix = model_mix.forward(feats_mix).squeeze()
 
 			except:
 				feats_la = feats_la.cpu()
@@ -198,7 +198,7 @@ if __name__ == '__main__':
 
 				pred_la = model_la.forward(feats_la).squeeze()
 				pred_pa = model_pa.forward(feats_pa).squeeze()
-				pred_mix = model_pa.forward(feats_mix).squeeze()
+				pred_mix = model_mix.forward(feats_mix).squeeze()
 
 			if args.train_mode == 'mix':
 				mixture_coef = torch.sigmoid(pred_mix).squeeze()
