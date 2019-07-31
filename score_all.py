@@ -29,6 +29,7 @@ if __name__ == '__main__':
 	parser.add_argument('--path-to-data-la', type=str, default='./data_la/feats.scp', metavar='Path', help='Path to input data')
 	parser.add_argument('--path-to-data-pa', type=str, default='./data_pa/feats.scp', metavar='Path', help='Path to input data')
 	parser.add_argument('--path-to-data-mix', type=str, default='./data_mix/feats.scp', metavar='Path', help='Path to input data')
+	parser.add_argument('--train-mode', choices=['mix', 'lapa', 'independent'], default='mix', help='Train mode')
 	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./', metavar='Path', help='Path to output hdf file')
@@ -185,7 +186,7 @@ if __name__ == '__main__':
 
 				pred_la = model_la.forward(feats_la).squeeze()
 				pred_pa = model_pa.forward(feats_pa).squeeze()
-				mixture_coef = torch.sigmoid(model_mix.forward(feats_mix)).squeeze()
+				pred_mix = model_pa.forward(feats_mix).squeeze()
 
 			except:
 				feats_la = feats_la.cpu()
@@ -197,13 +198,29 @@ if __name__ == '__main__':
 
 				pred_la = model_la.forward(feats_la).squeeze()
 				pred_pa = model_pa.forward(feats_pa).squeeze()
-				mixture_coef = torch.sigmoid(model_mix.forward(feats_mix)).squeeze()
+				pred_mix = model_pa.forward(feats_mix).squeeze()
 
-			score_all = 1.-torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).squeeze().cpu().item()
-			score_la = 1.-torch.sigmoid(pred_la).squeeze().cpu().item()
-			score_pa = 1.-torch.sigmoid(pred_pa).squeeze().cpu().item()
-			score_mix = 1.-2*abs(mixture_coef.cpu().item()-0.5)
-			score_fusion = (score_all+score_la+score_pa+score_mix)/4.
+			if args.train_mode == 'mix':
+				mixture_coef = torch.sigmoid(pred_mix).squeeze()
+				score_all = 1.-torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).squeeze().cpu().item()
+				score_la = 1.-torch.sigmoid(pred_la).squeeze().cpu().item()
+				score_pa = 1.-torch.sigmoid(pred_pa).squeeze().cpu().item()
+				score_mix = 1.-2*abs(mixture_coef.cpu().item()-0.5)
+				score_fusion = (score_all+score_la+score_pa+score_mix)/4.
+
+			elif args.train_mode == 'lapa':
+				score_all = 0.0
+				score_la = 1.-2*abs(torch.sigmoid(pred_la)-0.5).cpu().numpy().item()
+				score_pa = 1.-2*abs(torch.sigmoid(pred_pa)-0.5).cpu().numpy().item()
+				score_mix = 1.-2*abs(torch.sigmoid(pred_mix)-0.5).cpu().numpy().item()
+				score_fusion = (score_la+score_pa+score_mix)/3.
+
+			elif args.train_mode == 'independent':
+				score_all = 0.0
+				score_la = 1.-torch.sigmoid(pred_la).cpu().numpy().item()
+				score_pa = 1.-torch.sigmoid(pred_pa).cpu().numpy().item()
+				score_mix = 1.-torch.sigmoid(pred_mix).cpu().numpy().item()
+				score_fusion = (score_la+score_pa+score_mix)/3.
 
 			scores['all'].append(score_all)
 			scores['la'].append(score_la)
@@ -217,6 +234,9 @@ if __name__ == '__main__':
 		print(args.out_path)
 
 		for score_type, score_list in scores.items():
+
+			if (args.train_mode=='lapa' or args.train_mode=='independent') and score_type=='all':
+				continue
 
 			file_name = args.out_path+args.prefix+'_'+score_type+'.txt'
 
