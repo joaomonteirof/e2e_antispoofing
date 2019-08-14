@@ -61,7 +61,7 @@ class Loader(Dataset):
 
 class Loader_all(Dataset):
 
-	def __init__(self, hdf5_la_clean, hdf5_la_attack, hdf5_pa, hdf5_mix, max_nb_frames, n_cycles=1):
+	def __init__(self, hdf5_la_clean, hdf5_la_attack, hdf5_pa, hdf5_mix, max_nb_frames, label_smoothing=False, n_cycles=1):
 		super(Loader_all, self).__init__()
 		self.hdf5_la_clean = hdf5_la_clean
 		self.hdf5_la_attack = hdf5_la_attack
@@ -108,7 +108,10 @@ class Loader_all(Dataset):
 		utt_attack_pa = self.prep_utterance( self.open_file_pa[utt_attack][0] )
 		utt_attack_mix = self.prep_utterance( self.open_file_mix[utt_attack][0] )
 
-		return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.zeros(1), torch.ones(1), self.get_label(utt_clean), self.get_label(utt_attack)
+		if label_smoothing:
+			return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.rand()*0.2, torch.rand()*0.2+0.8, self.get_label(utt_clean, label_smoothing), self.get_label(utt_attack, label_smoothing)
+		else:
+			return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.zeros(1), torch.ones(1), self.get_label(utt_clean, label_smoothing), self.get_label(utt_attack, label_smoothing)
 
 	def __len__(self):
 		return self.n_cycles*np.maximum(self.len_1, self.len_2)
@@ -127,17 +130,26 @@ class Loader_all(Dataset):
 
 		return data_
 
-	def get_label(self, utt):
+	def get_label(self, utt, label_smoothing=False):
 		prefix = utt.split('-_-')[0]
 
 		assert (prefix=='LA' or prefix=='PA' or prefix=='CLEAN')
 
 		if prefix=='LA':
-			return torch.ones(1)
+			if label_smoothing:
+				return torch.rand()*0.2+0.8
+			else:
+				return torch.ones(1)
 		elif prefix=='PA':
-			return torch.zeros(1)
+			if label_smoothing:
+				return torch.rand()*0.2
+			else:
+				return torch.zeros(1)
 		elif prefix=='CLEAN':
-			return 0.5*torch.ones(1)
+			if label_smoothing:
+				return 0.5*torch.ones(1) + torch.rand()*0.2-0.1
+			else:
+				return 0.5*torch.ones(1)
 
 class Loader_all_valid(Dataset):
 
