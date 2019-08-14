@@ -196,5 +196,6 @@ print('Batch size: {}'.format(args.batch_size))
 print('LR: {}'.format(args.lr))
 print('Momentum: {}'.format(args.momentum))
 print('l2: {}'.format(args.l2))
+print('Label smoothing: {}'.format(not args.no_label_smoothing))
 
 trainer.train(n_epochs=args.epochs, save_every=args.save_every)
