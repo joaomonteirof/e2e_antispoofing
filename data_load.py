@@ -111,7 +111,7 @@ class Loader_all(Dataset):
 		utt_attack_mix = self.prep_utterance( self.open_file_mix[utt_attack][0] )
 
 		if self.label_smoothing:
-			return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.rand()*0.2, torch.rand()*0.2+0.8, self.get_label(utt_clean), self.get_label(utt_attack)
+			return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.rand(1)*0.2, torch.rand(1)*0.2+0.8, self.get_label(utt_clean), self.get_label(utt_attack)
 		else:
 			return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.zeros(1), torch.ones(1), self.get_label(utt_clean), self.get_label(utt_attack)
 
@@ -139,17 +139,17 @@ class Loader_all(Dataset):
 
 		if prefix=='LA':
 			if self.label_smoothing:
-				return torch.rand()*0.2+0.8
+				return torch.rand(1)*0.2+0.8
 			else:
 				return torch.ones(1)
 		elif prefix=='PA':
 			if self.label_smoothing:
-				return torch.rand()*0.2
+				return torch.rand(1)*0.2
 			else:
 				return torch.zeros(1)
 		elif prefix=='CLEAN':
 			if self.label_smoothing:
-				return 0.5*torch.ones(1) + torch.rand()*0.2-0.1
+				return 0.5*torch.ones(1) + torch.rand(1)*0.2-0.1
 			else:
 				return 0.5*torch.ones(1)
 
