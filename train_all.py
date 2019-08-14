@@ -55,7 +55,7 @@ else:
 	device = torch.device('cpu')
 
 if args.logdir:
-	writer = SummaryWriter(log_dir=args.logdir, comment=args.model_la+'-_-'+args.model_pa+'-_-'+args.model_mix)
+	writer = SummaryWriter(log_dir=args.logdir, comment=args.model_la+'-_-'+args.model_pa+'-_-'+args.model_mix, purge_step=True)
 else:
 	writer = None
 
