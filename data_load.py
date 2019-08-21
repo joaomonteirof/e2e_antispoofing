@@ -61,7 +61,7 @@ class Loader(Dataset):
 
 class Loader_all(Dataset):
 
-	def __init__(self, hdf5_la_clean, hdf5_la_attack, hdf5_pa, hdf5_mix, max_nb_frames, label_smoothing=False, n_cycles=1):
+	def __init__(self, hdf5_la_clean, hdf5_la_attack, hdf5_pa, hdf5_mix, max_nb_frames, label_smoothing=0.0, n_cycles=1):
 		super(Loader_all, self).__init__()
 		self.hdf5_la_clean = hdf5_la_clean
 		self.hdf5_la_attack = hdf5_la_attack
@@ -85,7 +85,8 @@ class Loader_all(Dataset):
 		self.open_file_pa = None
 		self.open_file_mix = None
 
-		self.label_smoothing = label_smoothing
+		self.label_smoothing = label_smoothing>0.0
+		self.label_dif = label_smoothing
 
 		print('Number of genuine, spoofing, and total recordings: {}, {}, {}'.format(self.len_1, self.len_2, self.len_1+self.len_2))
 
@@ -111,7 +112,7 @@ class Loader_all(Dataset):
 		utt_attack_mix = self.prep_utterance( self.open_file_mix[utt_attack][0] )
 
 		if self.label_smoothing:
-			return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.rand(1)*0.2, torch.rand(1)*0.2+0.8, self.get_label(utt_clean), self.get_label(utt_attack)
+			return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.rand(1)*self.label_dif, torch.rand(1)*self.label_dif+(1.-self.label_dif), self.get_label(utt_clean), self.get_label(utt_attack)
 		else:
 			return utt_clean_la, utt_clean_pa, utt_clean_mix, utt_attack_la, utt_attack_pa, utt_attack_mix, torch.zeros(1), torch.ones(1), self.get_label(utt_clean), self.get_label(utt_attack)
 
@@ -139,17 +140,17 @@ class Loader_all(Dataset):
 
 		if prefix=='LA':
 			if self.label_smoothing:
-				return torch.rand(1)*0.2+0.8
+				return torch.rand(1)*self.label_dif+(1.-self.label_dif)
 			else:
 				return torch.ones(1)
 		elif prefix=='PA':
 			if self.label_smoothing:
-				return torch.rand(1)*0.2
+				return torch.rand(1)*self.label_dif
 			else:
 				return torch.zeros(1)
 		elif prefix=='CLEAN':
 			if self.label_smoothing:
-				return 0.5*torch.ones(1) + torch.rand(1)*0.2-0.1
+				return 0.5*torch.ones(1) + torch.rand(1)*self.label_dif-self.label_dif*0.5
 			else:
 				return 0.5*torch.ones(1)
 
