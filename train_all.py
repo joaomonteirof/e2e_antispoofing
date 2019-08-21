@@ -46,7 +46,7 @@ parser.add_argument('--ncoef-pa', type=int, default=90, metavar='N', help='Numbe
 parser.add_argument('--ncoef-mix', type=int, default=90, metavar='N', help='Number of cepstral coefs for the CC case (default: 90)')
 parser.add_argument('--lists-path', type=str, default=None, metavar='Path', help='Path to list files per attack')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
-parser.add_argument('--no-label-smoothing', action='store_true', default=False)
+parser.add_argument('--smoothing', type=float, default=0.1, metavar='l', help='Label smoothing (default: 0.1) - Disable by setting it to 0')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
@@ -64,7 +64,7 @@ torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
 
-train_dataset = Loader_all(hdf5_la_clean = args.train_la_path+'train_clean.hdf', hdf5_la_attack = args.train_la_path+'train_attack.hdf', hdf5_pa=args.train_pa_hdf, hdf5_mix=args.train_mix_hdf, max_nb_frames = args.n_frames, label_smoothing=not args.no_label_smoothing, n_cycles=args.n_cycles)
+train_dataset = Loader_all(hdf5_la_clean = args.train_la_path+'train_clean.hdf', hdf5_la_attack = args.train_la_path+'train_attack.hdf', hdf5_pa=args.train_pa_hdf, hdf5_mix=args.train_mix_hdf, max_nb_frames = args.n_frames, label_smoothing=not args.smoothing, n_cycles=args.n_cycles)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 
 valid_dataset = Loader_all_valid(hdf5_la_clean = args.valid_la_path+'valid_clean.hdf', hdf5_la_attack = args.valid_la_path+'valid_attack.hdf', hdf5_pa=args.valid_pa_hdf, hdf5_mix=args.valid_mix_hdf, max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles)
@@ -196,6 +196,6 @@ print('Batch size: {}'.format(args.batch_size))
 print('LR: {}'.format(args.lr))
 print('Momentum: {}'.format(args.momentum))
 print('l2: {}'.format(args.l2))
-print('Label smoothing: {}'.format(not args.no_label_smoothing))
+print('Label smoothing: {}'.format(smoothing))
 
 trainer.train(n_epochs=args.epochs, save_every=args.save_every)
