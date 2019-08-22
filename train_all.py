@@ -64,7 +64,7 @@ torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
 
-train_dataset = Loader_all(hdf5_la_clean = args.train_la_path+'train_clean.hdf', hdf5_la_attack = args.train_la_path+'train_attack.hdf', hdf5_pa=args.train_pa_hdf, hdf5_mix=args.train_mix_hdf, max_nb_frames = args.n_frames, label_smoothing=not args.smoothing, n_cycles=args.n_cycles)
+train_dataset = Loader_all(hdf5_la_clean = args.train_la_path+'train_clean.hdf', hdf5_la_attack = args.train_la_path+'train_attack.hdf', hdf5_pa=args.train_pa_hdf, hdf5_mix=args.train_mix_hdf, max_nb_frames = args.n_frames, label_smoothing=args.smoothing, n_cycles=args.n_cycles)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 
 valid_dataset = Loader_all_valid(hdf5_la_clean = args.valid_la_path+'valid_clean.hdf', hdf5_la_attack = args.valid_la_path+'valid_attack.hdf', hdf5_pa=args.valid_pa_hdf, hdf5_mix=args.valid_mix_hdf, max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles)
