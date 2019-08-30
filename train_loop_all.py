@@ -10,7 +10,7 @@ from utils import compute_eer
 
 class TrainLoop(object):
 
-	def __init__(self, model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience, train_mode, checkpoint_path=None, checkpoint_epoch=None, cuda=True, logger=None):
+	def __init__(self, model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, train_mode, checkpoint_path=None, checkpoint_epoch=None, cuda=True, logger=None):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -27,9 +27,6 @@ class TrainLoop(object):
 		self.optimizer_la = optimizer_la
 		self.optimizer_pa = optimizer_pa
 		self.optimizer_mix = optimizer_mix
-		self.scheduler_la = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_la, factor=0.5, patience=patience, verbose=True, threshold=1e-4, min_lr=1e-7)
-		self.scheduler_pa = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_pa, factor=0.5, patience=patience, verbose=True, threshold=1e-4, min_lr=1e-7)
-		self.scheduler_mix = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer_mix, factor=0.5, patience=patience, verbose=True, threshold=1e-4, min_lr=1e-7)
 		self.train_loader = train_loader
 		self.valid_loader = valid_loader
 		self.total_iters = 0
@@ -75,9 +72,9 @@ class TrainLoop(object):
 					self.logger.add_scalar('Train/Train Loss LA', train_la, self.total_iters)
 					self.logger.add_scalar('Train/Train Loss PA', train_pa, self.total_iters)
 					self.logger.add_scalar('Train/Train Loss MIX', train_mix, self.total_iters)
-					self.logger.add_scalar('Info/LR_LA', self.optimizer_la.param_groups[0]['lr'], self.total_iters)
-					self.logger.add_scalar('Info/LR_PA', self.optimizer_pa.param_groups[0]['lr'], self.total_iters)
-					self.logger.add_scalar('Info/LR_MIX', self.optimizer_mix.param_groups[0]['lr'], self.total_iters)
+					self.logger.add_scalar('Info/LR_LA', self.optimizer_la.optimizer.param_groups[0]['lr'], self.total_iters)
+					self.logger.add_scalar('Info/LR_PA', self.optimizer_pa.optimizer.param_groups[0]['lr'], self.total_iters)
+					self.logger.add_scalar('Info/LR_MIX', self.optimizer_mix.optimizer.param_groups[0]['lr'], self.total_iters)
 				self.total_iters += 1
 
 			self.history['train_loss'].append(train_loss_epoch/(t+1))
@@ -156,11 +153,7 @@ class TrainLoop(object):
 			print('PA: Current validation loss, best validation loss, and epoch: {:0.4f}, {:0.4f}, {}'.format(self.history['valid_pa'][-1], np.min(self.history['valid_pa']), 1+np.argmin(self.history['valid_pa'])))
 			print('MIX: Current validation loss, best validation loss, and epoch: {:0.4f}, {:0.4f}, {}'.format(self.history['valid_mix'][-1], np.min(self.history['valid_mix']), 1+np.argmin(self.history['valid_mix'])))
 
-			self.scheduler_la.step(self.history['valid_la'][-1])
-			self.scheduler_pa.step(self.history['valid_pa'][-1])
-			self.scheduler_mix.step(self.history['valid_mix'][-1])
-
-			print('Current LRs (LA, PA, Mixture): {}, {}, {}'.format(self.optimizer_la.param_groups[0]['lr'], self.optimizer_pa.param_groups[0]['lr'], self.optimizer_mix.param_groups[0]['lr']))
+			print('Current LRs (LA, PA, Mixture): {}, {}, {}'.format(self.optimizer_la.optimizer.param_groups[0]['lr'], self.optimizer_pa.optimizer.param_groups[0]['lr'], self.optimizer_mix.optimizer.param_groups[0]['lr']))
 
 			self.cur_epoch += 1
 
@@ -293,9 +286,6 @@ class TrainLoop(object):
 		'optimizer_la_state': self.optimizer_la.state_dict(),
 		'optimizer_pa_state': self.optimizer_pa.state_dict(),
 		'optimizer_mix_state': self.optimizer_mix.state_dict(),
-		'scheduler_la_state': self.scheduler_la.state_dict(),
-		'scheduler_pa_state': self.scheduler_pa.state_dict(),
-		'scheduler_mix_state': self.scheduler_mix.state_dict(),
 		'history': self.history,
 		'total_iters': self.total_iters,
 		'cur_epoch': self.cur_epoch}
@@ -314,10 +304,6 @@ class TrainLoop(object):
 			self.optimizer_la.load_state_dict(ckpt['optimizer_la_state'])
 			self.optimizer_pa.load_state_dict(ckpt['optimizer_pa_state'])
 			self.optimizer_mix.load_state_dict(ckpt['optimizer_mix_state'])
-			# Load schedulers states
-			self.scheduler_la.load_state_dict(ckpt['scheduler_la_state'])
-			self.scheduler_pa.load_state_dict(ckpt['scheduler_pa_state'])
-			self.scheduler_mix.load_state_dict(ckpt['scheduler_mix_state'])
 			# Load history
 			self.history = ckpt['history']
 			self.total_iters = ckpt['total_iters']

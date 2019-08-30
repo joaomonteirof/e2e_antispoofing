@@ -9,6 +9,7 @@ import numpy as np
 from data_load import Loader_all, Loader_all_valid
 from torch.utils.tensorboard import SummaryWriter
 from utils import *
+from optimizer import TransformerOptimizer
 
 # Training settings
 parser = argparse.ArgumentParser(description='Speaker embbedings with contrastive loss')
@@ -20,9 +21,10 @@ parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='inp
 parser.add_argument('--valid-batch-size', type=int, default=64, metavar='N', help='input batch size for validation (default: 64)')
 parser.add_argument('--epochs', type=int, default=500, metavar='N', help='number of epochs to train (default: 500)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR', help='learning rate (default: 0.001)')
-parser.add_argument('--momentum', type=float, default=0.9, metavar='alpha', help='Alpha (default: 0.9)')
+parser.add_argument('--b1', type=float, default=0.9, metavar='m', help='Momentum paprameter (default: 0.9)')
+parser.add_argument('--b2', type=float, default=0.98, metavar='m', help='Momentum paprameter (default: 0.9)')
 parser.add_argument('--l2', type=float, default=1e-5, metavar='L2', help='Weight decay coefficient (default: 0.00001)')
-parser.add_argument('--patience', type=int, default=5, metavar='N', help='number of epochs without improvement to wait before reducing lr (default: 5)')
+parser.add_argument('--warmup', type=int, default=4000, metavar='N', help='Iterations until reach lr (default: 4000)')
 parser.add_argument('--checkpoint-epoch', type=int, default=None, metavar='N', help='epoch to load for checkpointing. If None, training starts from scratch')
 parser.add_argument('--checkpoint-path', type=str, default=None, metavar='Path', help='Path for checkpointing')
 parser.add_argument('--logdir', type=str, default=None, metavar='Path', help='Path for checkpointing')
@@ -182,11 +184,11 @@ model_la = model_la.to(device)
 model_pa = model_pa.to(device)
 model_mix = model_mix.to(device)
 
-optimizer_la = optim.SGD(model_la.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
-optimizer_pa = optim.SGD(model_pa.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
-optimizer_mix = optim.SGD(model_mix.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
+optimizer_la = TransformerOptimizer(optim.Adam(model_la.parameters(), betas=(args.b1, args.b2), weight_decay=args.l2), lr=args.lr, warmup_steps=args.warmup)
+optimizer_pa = optimTransformerOptimizer(optim.Adam(model_la.parameters(), betas=(args.b1, args.b2), weight_decay=args.l2), lr=args.lr, warmup_steps=args.warmup)
+optimizer_mix = TransformerOptimizer(optim.Adam(model_pa.parameters(), betas=(args.b1, args.b2), weight_decay=args.l2), lr=args.lr, warmup_steps=args.warmup)
 
-trainer = TrainLoop(model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, patience=args.patience, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, logger=writer)
+trainer = TrainLoop(model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, logger=writer)
 
 print('Cuda Mode: {}'.format(args.cuda))
 print('Device: {}'.format(device))
@@ -194,7 +196,9 @@ print('Train mode: {}'.format(args.train_mode))
 print('Selected models (LA, PA, MIX): {}, {}, {}'.format(args.model_la, args.model_pa, args.model_mix))
 print('Batch size: {}'.format(args.batch_size))
 print('LR: {}'.format(args.lr))
-print('Momentum: {}'.format(args.momentum))
+print('B1 and B2: {}, {}'.format(args.b1, args.b2))
+print('l2: {}'.format(args.l2))
+print('Warmup iterations: {}'.format(args.smoothing))
 print('l2: {}'.format(args.l2))
 print('Label smoothing: {}'.format(args.smoothing))
 
