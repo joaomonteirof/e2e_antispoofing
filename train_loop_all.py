@@ -309,9 +309,9 @@ class TrainLoop(object):
 			self.total_iters = ckpt['total_iters']
 			self.cur_epoch = ckpt['cur_epoch']
 			if self.cuda_mode:
-				self.model_la = self.model_la.cuda()
-				self.model_pa = self.model_pa.cuda()
-				self.model_mix = self.model_mix.cuda()
+				self.model_la = self.model_la.to(self.device)
+				self.model_pa = self.model_pa.to(self.device)
+				self.model_mix = self.model_mix.to(self.device)
 
 		else:
 			print('No checkpoint found at: {}'.format(ckpt))
