@@ -304,6 +304,10 @@ class TrainLoop(object):
 			self.optimizer_la.load_state_dict(ckpt['optimizer_la_state'])
 			self.optimizer_pa.load_state_dict(ckpt['optimizer_pa_state'])
 			self.optimizer_mix.load_state_dict(ckpt['optimizer_mix_state'])
+			self.optimizer_la.step_num = ckpt['total_iters']
+			self.optimizer_pa.step_num = ckpt['total_iters']
+			self.optimizer_mix.step_num = ckpt['total_iters']
+
 			# Load history
 			self.history = ckpt['history']
 			self.total_iters = ckpt['total_iters']
