@@ -163,9 +163,10 @@ class TrainLoop(object):
 		print('Training done!')
 
 		if self.valid_loader is not None:
-			print('Best validation loss and corresponding epoch: {:0.4f}, {}'.format(np.min(self.history['valid_loss']), 1+np.argmin(self.history['valid_loss'])))
-
-			return np.min(self.history['valid_loss'])
+			print('\nLA: Best validation loss and corresponding epoch: {:0.4f}, {}'.format(np.min(self.history['valid_la']), 1+np.argmin(self.history['valid_la'])))
+			print('PA: Best validation loss and corresponding epoch: {:0.4f}, {}'.format(np.min(self.history['valid_pa']), 1+np.argmin(self.history['valid_pa'])))
+			print('MIX: Best validation loss and corresponding epoch: {:0.4f}, {}'.format(np.min(self.history['valid_mix']), 1+np.argmin(self.history['valid_mix'])))
+			print('ALL: Best validation loss and corresponding epoch: {:0.4f}, {}'.format(np.min(self.history['valid_all']), 1+np.argmin(self.history['valid_all'])))
 
 	def train_step(self, batch):
 
