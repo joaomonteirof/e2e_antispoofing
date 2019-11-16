@@ -471,22 +471,20 @@ class lcnn_29layers_CC(nn.Module):
 		x = self.activation(self.bn1(x))
 
 		x = self.conv1(x)
-		x = F.max_pool2d(x, 2) + F.avg_pool2d(x, 2)
+
+		x = F.max_pool2d(x, 2, ceil_mode=True) + F.avg_pool2d(x, 2, ceil_mode=True)
 
 		x = self.block1(x)
 		x = self.group1(x)
-		x = F.max_pool2d(x, 2) + F.avg_pool2d(x, 2)
-
+		x = F.max_pool2d(x, 2, ceil_mode=True) + F.avg_pool2d(x, 2, ceil_mode=True)
 		x = self.block2(x)
 		x = self.group2(x)
-		x = F.max_pool2d(x, 2) + F.avg_pool2d(x, 2)
-
+		x = F.max_pool2d(x, 2, ceil_mode=True) + F.avg_pool2d(x, 2, ceil_mode=True)
 		x = self.block3(x)
 		x = self.group3(x)
 		x = self.block4(x)
 		x = self.group4(x)
-		x = F.max_pool2d(x, 2) + F.avg_pool2d(x, 2)
-
+		x = F.max_pool2d(x, 2, ceil_mode=True) + F.avg_pool2d(x, 2, ceil_mode=True)
 		x = x.squeeze(2)
 		stats = self.attention(x.permute(0,2,1).contiguous())
 		x = self.fc(stats)
