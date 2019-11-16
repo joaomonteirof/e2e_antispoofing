@@ -51,7 +51,9 @@ class TrainLoop(object):
 				self.history['train_loss_batch'].append(train_loss)
 				train_loss_epoch+=train_loss
 				if self.logger:
-					self.logger.add_scalar('Train Loss', train_loss, self.total_iters)
+					self.logger.add_scalar('Train/Train Loss', train_loss, self.total_iters)
+					self.logger.add_scalar('Info/LR', self.optimizer.param_groups[0]['lr'], self.total_iters)
+					self.logger.add_scalar('Info/Epoch', self.cur_epoch, self.total_iters)
 				self.total_iters += 1
 
 			self.history['train_loss'].append(train_loss_epoch/(t+1))
@@ -74,9 +76,11 @@ class TrainLoop(object):
 				self.history['valid_loss'].append(compute_eer(labels, scores))
 
 				if self.logger:
-					self.logger.add_scalar('Valid EER', self.history['valid_loss'][-1], np.min(self.history['valid_loss']), self.total_iters)
-					self.logger.add_scalar('Best valid EER', np.min(self.history['valid_loss']), self.total_iters)
+					self.logger.add_scalar('Valid/EER', self.history['valid_loss'][-1], self.total_iters)
+					self.logger.add_scalar('Valid/Best EER', np.min(self.history['valid_loss']), self.total_iters)
 					self.logger.add_pr_curve('Valid. ROC', labels=labels, predictions=scores, global_step=self.total_iters)
+					self.logger.add_histogram('Valid/Scores', values=scores, global_step=self.total_iters)
+					self.logger.add_histogram('Valid/Labels', values=labels, global_step=self.total_iters)
 
 				print('Current validation loss, best validation loss, and epoch: {:0.4f}, {:0.4f}, {}'.format(self.history['valid_loss'][-1], np.min(self.history['valid_loss']), 1+np.argmin(self.history['valid_loss'])))
 
