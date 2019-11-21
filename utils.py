@@ -57,7 +57,7 @@ def compute_eer_labels(labels, y_score):
 	return eer
 
 def compute_eer(y, y_score):
-	fpr, tpr, thresholds = metrics.roc_curve(y, y_score, pos_label=0)
+	fpr, tpr, thresholds = metrics.roc_curve(y, y_score, pos_label=1)
 	fnr = 1 - tpr
 
 	t = np.nanargmin(np.abs(fnr-fpr))
