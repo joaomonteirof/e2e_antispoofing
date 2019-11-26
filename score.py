@@ -104,12 +104,18 @@ if __name__ == '__main__':
 	print('Start of scores computation')
 
 	score_list = []
+	skipped_utterances = 0
 
 	with torch.no_grad():
 
 		for i, utt in enumerate(test_utts):
 
-			feats = prep_feats(data[utt])
+			try:
+				feats = prep_feats(data[utt])
+			except KeyError:
+				print('\nSkipping utterance {}. Not found within the data\n'.format(utt))
+				skipped_utterances+=1
+				continue
 
 			try:
 				if args.cuda:
@@ -143,3 +149,4 @@ if __name__ == '__main__':
 		print('EER: {}'.format(compute_eer_labels(label_list, score_list)))
 
 	print('All done!!')
+	print('\nTotal skipped trials: {}'.format(skipped_utterances))
