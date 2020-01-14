@@ -259,22 +259,22 @@ class TrainLoop(object):
 
 				mixture_coef = torch.sigmoid(pred_mix)
 				pred = mixture_coef*pred_la + (1.-mixture_coef)*pred_pa
-				score_all = 1.-torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).cpu().numpy().squeeze()
-				score_la = 1.-torch.sigmoid(pred_la).cpu().numpy().squeeze()
-				score_pa = 1.-torch.sigmoid(pred_pa).cpu().numpy().squeeze()
-				score_mix = 1.-2*abs(mixture_coef-0.5).cpu().numpy().squeeze()
+				score_all = torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).cpu().numpy().squeeze()
+				score_la = torch.sigmoid(pred_la).cpu().numpy().squeeze()
+				score_pa = torch.sigmoid(pred_pa).cpu().numpy().squeeze()
+				score_mix = 2*abs(mixture_coef-0.5).cpu().numpy().squeeze()
 				return score_all, score_la, score_pa, score_mix, y.cpu().numpy().squeeze()
 
 			elif self.train_mode == 'lapa':
-				score_la = 1.-2*abs(torch.sigmoid(pred_la)-0.5).cpu().numpy().squeeze()
-				score_pa = 1.-2*abs(torch.sigmoid(pred_pa)-0.5).cpu().numpy().squeeze()
-				score_mix = 1.-2*abs(torch.sigmoid(pred_mix)-0.5).cpu().numpy().squeeze()
+				score_la = 2*abs(torch.sigmoid(pred_la)-0.5).cpu().numpy().squeeze()
+				score_pa = 2*abs(torch.sigmoid(pred_pa)-0.5).cpu().numpy().squeeze()
+				score_mix = 2*abs(torch.sigmoid(pred_mix)-0.5).cpu().numpy().squeeze()
 				return score_la, score_pa, score_mix, y.cpu().numpy().squeeze()
 
 			elif self.train_mode == 'independent':
-				score_la = 1.-torch.sigmoid(pred_la).cpu().numpy().squeeze()
-				score_pa = 1.-torch.sigmoid(pred_pa).cpu().numpy().squeeze()
-				score_mix = 1.-torch.sigmoid(pred_mix).cpu().numpy().squeeze()
+				score_la = torch.sigmoid(pred_la).cpu().numpy().squeeze()
+				score_pa = torch.sigmoid(pred_pa).cpu().numpy().squeeze()
+				score_mix = torch.sigmoid(pred_mix).cpu().numpy().squeeze()
 				return score_la, score_pa, score_mix, y.cpu().numpy().squeeze()
 
 	def checkpointing(self):
