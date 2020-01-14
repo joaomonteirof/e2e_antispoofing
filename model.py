@@ -698,3 +698,55 @@ class lcnn_29layers_v2_pca(nn.Module):
 		x = F.dropout(fc, training=self.training)
 		out = self.fc2(x)
 		return out
+
+class StatisticalPooling(nn.Module):
+
+	def forward(self, x):
+		# x is 3-D with axis [B, feats, T]
+		mu = x.mean(dim=2, keepdim=False)
+		std = (x+torch.randn_like(x)*1e-6).std(dim=2, keepdim=False)
+		return torch.cat((mu, std), dim=1)
+
+class TDNN(nn.Module):
+	def __init__(self, nclasses=-1, ncoef=90, init_coef=0):
+		super(TDNN, self).__init__()
+
+		self.ncoef=ncoef
+		self.init_coef=init_coef
+
+		self.model = nn.Sequential( nn.Conv1d(ncoef, 512, 5, padding=2),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Conv1d(512, 512, 3, dilation=2, padding=2),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Conv1d(512, 512, 3, dilation=3, padding=3),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Conv1d(512, 512, 1),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Conv1d(512, 1500, 1),
+			nn.BatchNorm1d(1500),
+			nn.ReLU(inplace=True) )
+
+		self.pooling = StatisticalPooling()
+
+		self.post_pooling = nn.Sequential(nn.Linear(3000, 512),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Linear(512, 512),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Linear(512, nclasses) if nclasses>2 else nn.Linear(512, 1) )
+
+	def forward(self, x):
+
+		x = x[:,:,self.init_coef:,:].squeeze(1)
+
+		x = self.model(x)
+		x = self.pooling(x)
+		out = self.post_pooling(x)
+
+		return out
+

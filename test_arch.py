@@ -10,7 +10,7 @@ from data_load import Loader
 
 # Training settings
 parser = argparse.ArgumentParser(description='Test new architectures')
-parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'all'], default='resnet', help='Model arch')
+parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'all'], default='resnet', help='Model arch')
 args = parser.parse_args()
 
 if args.model == 'lstm' or args.model == 'all':
@@ -73,3 +73,8 @@ if args.model == 'resnet_CC' or args.model == 'all':
 	model = model_.ResNet_CC()
 	mu = model.forward(batch)
 	print('resnet_CC', mu.size())
+if args.model == 'TDNN' or args.model == 'all':
+	batch = torch.rand(3, 1, 90, 300)
+	model = model_.TDNN()
+	mu = model.forward(batch)
+	print('TDNN', mu.size())
