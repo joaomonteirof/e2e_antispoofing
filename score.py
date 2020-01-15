@@ -30,7 +30,7 @@ if __name__ == '__main__':
 	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
-	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC'], default='lcnn_9', help='Model arch')
+	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN'], default='lcnn_9', help='Model arch')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	parser.add_argument('--no-output-file', action='store_true', default=False, help='Disables writing scores into out file')
 	parser.add_argument('--no-eer', action='store_true', default=False, help='Disables computation of EER')
@@ -78,6 +78,8 @@ if __name__ == '__main__':
 		model = model_.lcnn_29layers_CC(ncoef=args.ncoef, init_coef=args.init_coef)
 	elif args.model == 'resnet_CC':
 		model = model_.ResNet_CC(ncoef=args.ncoef, init_coef=args.init_coef)
+	elif args.model == 'TDNN':
+		model = model_.TDNN(ncoef=args.ncoef, init_coef=args.init_coef)
 
 	print('Loading model')
 
