@@ -30,7 +30,7 @@ if __name__ == '__main__':
 	parser.add_argument('--path-to-data-pa', type=str, default='./data_pa/feats.scp', metavar='Path', help='Path to input data')
 	parser.add_argument('--path-to-data-mix', type=str, default='./data_mix/feats.scp', metavar='Path', help='Path to input data')
 	parser.add_argument('--train-mode', choices=['mix', 'lapa', 'independent'], default='mix', help='Train mode')
-	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
+	parser.add_argument('--trials-path', type=str, default=None, metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./', metavar='Path', help='Path to output hdf file')
 	parser.add_argument('--prefix', type=str, default='./scores', metavar='Path', help='prefix for score files names')
@@ -152,14 +152,18 @@ if __name__ == '__main__':
 
 	print('Loading data')
 
-	if args.eval:
-		test_utts = read_trials(args.trials_path, eval_=args.eval)
-	else:
-		test_utts, attack_type_list, label_list = read_trials(args.trials_path, eval_=args.eval)
-
 	data_la = { k:m for k,m in read_mat_scp(args.path_to_data_la) }
 	data_pa = { k:m for k,m in read_mat_scp(args.path_to_data_pa) }
 	data_mix = { k:m for k,m in read_mat_scp(args.path_to_data_mix) }
+
+
+	if args.trials_path:
+		if args.eval:
+			test_utts = read_trials(args.trials_path, eval_=args.eval)
+		else:
+			test_utts, attack_type_list, label_list = read_trials(args.trials_path, eval_=args.eval)
+	else:
+		test_utts = list(data_la.keys())
 
 	print('Data loaded')
 
@@ -247,14 +251,14 @@ if __name__ == '__main__':
 			file_name = args.out_path+args.prefix+'_'+score_type+'.txt'
 
 			with open(file_name, 'w') as f:
-				if args.eval:
+				if args.eval or args.trials_path is None:
 					for i, utt in enumerate(test_utts):
 						f.write("%s" % ' '.join([utt, str(score_list[i])+'\n']))
 				else:
 					for i, utt in enumerate(test_utts):
 						f.write("%s" % ' '.join([utt, attack_type_list[i], label_list[i], str(score_list[i])+'\n']))
 
-	if not args.no_eer and not args.eval:
+	if not args.no_eer and not args.eval and args.trials_path:
 		for score_type, score_list in scores.items():
 			print('\nEER {}: {}\n'.format(score_type, compute_eer_labels(label_list, score_list)))
 
