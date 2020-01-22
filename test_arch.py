@@ -11,7 +11,7 @@ from data_load import Loader
 # Training settings
 parser = argparse.ArgumentParser(description='Test new architectures')
 parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'all'], default='resnet', help='Model arch')
-parser.add_argument('--resnet-type', choices=['18', '34', '50', '101'], default='18', help='Resnet arch')
+parser.add_argument('--resnet-type', choices=['18', '28', '34', '50', '101'], default='18', help='Resnet arch')
 args = parser.parse_args()
 
 if args.model == 'lstm' or args.model == 'all':

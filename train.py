@@ -14,7 +14,7 @@ from utils import *
 # Training settings
 parser = argparse.ArgumentParser(description='Speaker embbedings with contrastive loss')
 parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN'], default='lcnn_9', help='Model arch')
-parser.add_argument('--resnet-type', choices=['18', '34', '50', '101'], default='18', help='Resnet arch')
+parser.add_argument('--resnet-type', choices=['18', '28', '34', '50', '101'], default='18', help='Resnet arch')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--valid-batch-size', type=int, default=64, metavar='N', help='input batch size for validation (default: 64)')
 parser.add_argument('--epochs', type=int, default=500, metavar='N', help='number of epochs to train (default: 500)')

@@ -144,7 +144,7 @@ class cnn_lstm(nn.Module):
 				layer.weight.data.fill_(1)
 				layer.bias.data.zero_()
 
-RESNET_CONFIGS = {'18':[[2,2,2,2], PreActBlock], '34':[[3,4,6,3], PreActBlock], '50':[[3,4,6,3], PreActBottleneck], '101':[[3,4,23,3], PreActBottleneck]}
+RESNET_CONFIGS = {'18':[[2,2,2,2], PreActBlock], '28':[[3,4,6,3], PreActBlock], '34':[[3,4,6,3], PreActBlock], '50':[[3,4,6,3], PreActBottleneck], '101':[[3,4,23,3], PreActBottleneck]}
 
 class ResNet(nn.Module):
 	def __init__(self, resnet_type='18', nclasses=-1):
@@ -203,7 +203,7 @@ class ResNet(nn.Module):
 		x = self.layer4(x)
 		x = self.conv5(x)
 		x = self.activation(self.bn5(x)).squeeze(2)
-		print('hahahahaha', x.size())
+		
 		stats = self.attention(x.permute(0,2,1).contiguous())
 		fc = F.relu(self.lbn(self.fc(stats)))
 		mu = self.fc_mu(fc)
