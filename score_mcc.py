@@ -31,6 +31,7 @@ if __name__ == '__main__':
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
 	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC'], default='lcnn_9', help='Model arch')
+	parser.add_argument('--resnet-type', choices=['18', '34', '50', '101'], default='18', help='Resnet arch')
 	parser.add_argument('--n-classes', type=int, default=-1, metavar='N', help='Number of classes for the mcc case (default: binary classification)')
 	parser.add_argument('--ncoef', type=int, default=90, metavar='N', help='Number of cepstral coefs (default: 90)')
 	parser.add_argument('--init-coef', type=int, default=0, metavar='N', help='First cepstral coefs (default: 0)')
@@ -56,9 +57,9 @@ if __name__ == '__main__':
 	if args.model == 'lstm':
 		model = model_.cnn_lstm(nclasses=args.n_classes)
 	elif args.model == 'resnet':
-		model = model_.ResNet(nclasses=args.n_classes)
+		model = model_.ResNet(nclasses=args.n_classes, resnet_type=args.resnet_type)
 	elif args.model == 'resnet_pca':
-		model = model_.ResNet_pca(nclasses=args.n_classes)
+		model = model_.ResNet_pca(nclasses=args.n_classes, resnet_type=args.resnet_type)
 	elif args.model == 'lcnn_9':
 		model = model_.lcnn_9layers(nclasses=args.n_classes)
 	elif args.model == 'lcnn_29':
@@ -76,7 +77,7 @@ if __name__ == '__main__':
 	elif args.model == 'lcnn_29_CC':
 		model = model_.lcnn_29layers_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
 	elif args.model == 'resnet_CC':
-		model = model_.ResNet_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
+		model = model_.ResNet_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef, resnet_type=args.resnet_type)
 
 	print('Loading model')
 

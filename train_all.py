@@ -16,6 +16,9 @@ parser = argparse.ArgumentParser(description='Speaker embbedings with contrastiv
 parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN'], default='lcnn_29_CC', help='Model arch')
 parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN'], default='lcnn_9_prodspec', help='Model arch')
 parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--resnet-type-la', choices=['18', '34', '50', '101'], default='18', help='Resnet arch')
+parser.add_argument('--resnet-type-pa', choices=['18', '34', '50', '101'], default='18', help='Resnet arch')
+parser.add_argument('--resnet-type-mix', choices=['18', '34', '50', '101'], default='18', help='Resnet arch')
 parser.add_argument('--train-mode', choices=['mix', 'lapa', 'independent'], default='mix', help='Train mode')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--valid-batch-size', type=int, default=64, metavar='N', help='input batch size for validation (default: 64)')
@@ -78,9 +81,9 @@ valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.valid_
 if args.model_la == 'lstm':
 	model_la = model_.cnn_lstm()
 elif args.model_la == 'resnet':
-	model_la = model_.ResNet()
+	model_la = model_.ResNet(resnet_type=args.resnet_type_la)
 elif args.model_la == 'resnet_pca':
-	model_la = model_.ResNet_pca()
+	model_la = model_.ResNet_pca(resnet_type=args.resnet_type_la)
 elif args.model_la == 'lcnn_9':
 	model_la = model_.lcnn_9layers()
 elif args.model_la == 'lcnn_29':
@@ -98,16 +101,16 @@ elif args.model_la == 'lcnn_9_CC':
 elif args.model_la == 'lcnn_29_CC':
 	model_la = model_.lcnn_29layers_CC(ncoef=args.ncoef_la)
 elif args.model_la == 'resnet_CC':
-	model_la = model_.ResNet_CC(ncoef=args.ncoef_la)
+	model_la = model_.ResNet_CC(ncoef=args.ncoef_la, resnet_type=args.resnet_type_la)
 elif args.model_la == 'TDNN':
 	model_la = model_.TDNN(ncoef=args.ncoef_la)
 
 if args.model_pa == 'lstm':
 	model_pa = model_.cnn_lstm()
 elif args.model_pa == 'resnet':
-	model_pa = model_.ResNet()
+	model_pa = model_.ResNet(resnet_type=args.resnet_type_pa)
 elif args.model_pa == 'resnet_pca':
-	model_pa = model_.ResNet_pca()
+	model_pa = model_.ResNet_pca(resnet_type=args.resnet_type_pa)
 elif args.model_pa == 'lcnn_9':
 	model_pa = model_.lcnn_9layers()
 elif args.model_pa == 'lcnn_29':
@@ -125,16 +128,16 @@ elif args.model_pa == 'lcnn_9_CC':
 elif args.model_pa == 'lcnn_29_CC':
 	model_pa = model_.lcnn_29layers_CC(ncoef=args.ncoef_pa)
 elif args.model_pa == 'resnet_CC':
-	model_pa = model_.ResNet_CC(ncoef=args.ncoef_pa)
+	model_pa = model_.ResNet_CC(ncoef=args.ncoef_pa, resnet_type=args.resnet_type_pa)
 elif args.model_pa == 'TDNN':
 	model_pa = model_.TDNN(ncoef=args.ncoef_pa)
 
 if args.model_mix == 'lstm':
 	model_mix = model_.cnn_lstm()
 elif args.model_mix == 'resnet':
-	model_mix = model_.ResNet()
+	model_mix = model_.ResNet(resnet_type=args.resnet_type_mix)
 elif args.model_mix == 'resnet_pca':
-	model_mix = model_.ResNet_pca()
+	model_mix = model_.ResNet_pca(resnet_type=args.resnet_type_mix)
 elif args.model_mix == 'lcnn_9':
 	model_mix = model_.lcnn_9layers()
 elif args.model_mix == 'lcnn_29':
@@ -152,7 +155,7 @@ elif args.model_mix == 'lcnn_9_CC':
 elif args.model_mix == 'lcnn_29_CC':
 	model_mix = model_.lcnn_29layers_CC(ncoef=args.ncoef_mix)
 elif args.model_mix == 'resnet_CC':
-	model_mix = model_.ResNet_CC(ncoef=args.ncoef_mix)
+	model_mix = model_.ResNet_CC(ncoef=args.ncoef_mix, resnet_type=args.resnet_type_mix)
 elif args.model_mix == 'TDNN':
 	model_mix = model_.TDNN(ncoef=args.ncoef_mix)
 

@@ -29,6 +29,9 @@ if __name__ == '__main__':
 	parser.add_argument('--path-to-data-la', type=str, default='./data_la/feats.scp', metavar='Path', help='Path to input data')
 	parser.add_argument('--path-to-data-pa', type=str, default='./data_pa/feats.scp', metavar='Path', help='Path to input data')
 	parser.add_argument('--path-to-data-mix', type=str, default='./data_mix/feats.scp', metavar='Path', help='Path to input data')
+	parser.add_argument('--resnet-type-la', choices=['18', '34', '50', '101'], default='18', help='Resnet arch')
+	parser.add_argument('--resnet-type-pa', choices=['18', '34', '50', '101'], default='18', help='Resnet arch')
+	parser.add_argument('--resnet-type-mix', choices=['18', '34', '50', '101'], default='18', help='Resnet arch')
 	parser.add_argument('--train-mode', choices=['mix', 'lapa', 'independent'], default='mix', help='Train mode')
 	parser.add_argument('--trials-path', type=str, default=None, metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
@@ -60,9 +63,9 @@ if __name__ == '__main__':
 	if args.model_la == 'lstm':
 		model_la = model_.cnn_lstm()
 	elif args.model_la == 'resnet':
-		model_la = model_.ResNet()
+		model_la = model_.ResNet(resnet_type=args.resnet_type_la)
 	elif args.model_la == 'resnet_pca':
-		model_la = model_.ResNet_pca()
+		model_la = model_.ResNet_pca(resnet_type=args.resnet_type_la)
 	elif args.model_la == 'lcnn_9':
 		model_la = model_.lcnn_9layers()
 	elif args.model_la == 'lcnn_29':
@@ -80,16 +83,16 @@ if __name__ == '__main__':
 	elif args.model_la == 'lcnn_29_CC':
 		model_la = model_.lcnn_29layers_CC(ncoef=args.ncoef_la)
 	elif args.model_la == 'resnet_CC':
-		model_la = model_.ResNet_CC(ncoef=args.ncoef_la)
+		model_la = model_.ResNet_CC(ncoef=args.ncoef_la, resnet_type=args.resnet_type_la)
 	elif args.model_la == 'TDNN':
 		model_la = model_.TDNN(ncoef=args.ncoef_la)
 
 	if args.model_pa == 'lstm':
 		model_pa = model_.cnn_lstm()
 	elif args.model_pa == 'resnet':
-		model_pa = model_.ResNet()
+		model_pa = model_.ResNet(resnet_type=args.resnet_type_pa)
 	elif args.model_pa == 'resnet_pca':
-		model_pa = model_.ResNet_pca()
+		model_pa = model_.ResNet_pca(resnet_type=args.resnet_type_pa)
 	elif args.model_pa == 'lcnn_9':
 		model_pa = model_.lcnn_9layers()
 	elif args.model_pa == 'lcnn_29':
@@ -107,16 +110,16 @@ if __name__ == '__main__':
 	elif args.model_pa == 'lcnn_29_CC':
 		model_pa = model_.lcnn_29layers_CC(ncoef=args.ncoef_pa)
 	elif args.model_pa == 'resnet_CC':
-		model_pa = model_.ResNet_CC(ncoef=args.ncoef_pa)
+		model_pa = model_.ResNet_CC(ncoef=args.ncoef_pa, resnet_type=args.resnet_type_pa)
 	elif args.model_pa == 'TDNN':
 		model_pa = model_.TDNN(ncoef=args.ncoef_pa)
 
 	if args.model_mix == 'lstm':
 		model_mix = model_.cnn_lstm()
 	elif args.model_mix == 'resnet':
-		model_mix = model_.ResNet()
+		model_mix = model_.ResNet(resnet_type=args.resnet_type_mix)
 	elif args.model_mix == 'resnet_pca':
-		model_mix = model_.ResNet_pca()
+		model_mix = model_.ResNet_pca(resnet_type=args.resnet_type_mix)
 	elif args.model_mix == 'lcnn_9':
 		model_mix = model_.lcnn_9layers()
 	elif args.model_mix == 'lcnn_29':
@@ -134,7 +137,7 @@ if __name__ == '__main__':
 	elif args.model_mix == 'lcnn_29_CC':
 		model_mix = model_.lcnn_29layers_CC(ncoef=args.ncoef_mix)
 	elif args.model_mix == 'resnet_CC':
-		model_mix = model_.ResNet_CC(ncoef=args.ncoef_mix)
+		model_mix = model_.ResNet_CC(ncoef=args.ncoef_mix, resnet_type=args.resnet_type_mix)
 	elif args.model_mix == 'TDNN':
 		model_mix = model_.TDNN(ncoef=args.ncoef_mix)
 

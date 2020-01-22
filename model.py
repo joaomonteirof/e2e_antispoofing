@@ -3,6 +3,86 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 
+class SelfAttention(nn.Module):
+	def __init__(self, hidden_size):
+		super(SelfAttention, self).__init__()
+
+		#self.output_size = output_size
+		self.hidden_size = hidden_size
+		self.att_weights = nn.Parameter(torch.Tensor(1, hidden_size),requires_grad=True)
+
+		init.kaiming_uniform_(self.att_weights)
+
+	def forward(self, inputs):
+
+		batch_size = inputs.size(0)
+		weights = torch.bmm(inputs, self.att_weights.permute(1, 0).unsqueeze(0).repeat(batch_size, 1, 1))
+
+		if inputs.size(0)==1:
+			attentions = F.softmax(torch.tanh(weights),dim=1)
+			weighted = torch.mul(inputs, attentions.expand_as(inputs))
+		else:
+			attentions = F.softmax(torch.tanh(weights.squeeze()),dim=1)
+			weighted = torch.mul(inputs, attentions.unsqueeze(2).expand_as(inputs))
+
+		noise = 1e-5*torch.randn(weighted.size())
+
+		if inputs.is_cuda:
+			noise = noise.to(inputs.device)
+
+		avg_repr, std_repr = weighted.sum(1), (weighted+noise).std(1)
+
+		representations = torch.cat((avg_repr,std_repr),1)
+
+		return representations
+
+class PreActBlock(nn.Module):
+	'''Pre-activation version of the BasicBlock.'''
+	expansion = 1
+
+	def __init__(self, in_planes, planes, stride=1):
+		super(PreActBlock, self).__init__()
+		self.bn1 = nn.BatchNorm2d(in_planes)
+		self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
+		self.bn2 = nn.BatchNorm2d(planes)
+		self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
+
+		if stride != 1 or in_planes != self.expansion*planes:
+			self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False))
+
+	def forward(self, x):
+		out = F.relu(self.bn1(x))
+		shortcut = self.shortcut(out) if hasattr(self, 'shortcut') else x
+		out = self.conv1(out)
+		out = self.conv2(F.relu(self.bn2(out)))
+		out += shortcut
+		return out
+
+class PreActBottleneck(nn.Module):
+	'''Pre-activation version of the original Bottleneck module.'''
+	expansion = 4
+
+	def __init__(self, in_planes, planes, stride=1):
+		super(PreActBottleneck, self).__init__()
+		self.bn1 = nn.BatchNorm2d(in_planes)
+		self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
+		self.bn2 = nn.BatchNorm2d(planes)
+		self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
+		self.bn3 = nn.BatchNorm2d(planes)
+		self.conv3 = nn.Conv2d(planes, self.expansion*planes, kernel_size=1, bias=False)
+
+		if stride != 1 or in_planes != self.expansion*planes:
+			self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False))
+
+	def forward(self, x):
+		out = F.relu(self.bn1(x))
+		shortcut = self.shortcut(out) if hasattr(self, 'shortcut') else x
+		out = self.conv1(out)
+		out = self.conv2(F.relu(self.bn2(out)))
+		out = self.conv3(F.relu(self.bn3(out)))
+		out += shortcut
+		return out
+
 class cnn_lstm(nn.Module):
 	def __init__(self, n_z=256, nclasses=-1):
 		super(cnn_lstm, self).__init__()
@@ -64,65 +144,14 @@ class cnn_lstm(nn.Module):
 				layer.weight.data.fill_(1)
 				layer.bias.data.zero_()
 
-class SelfAttention(nn.Module):
-	def __init__(self, hidden_size):
-		super(SelfAttention, self).__init__()
-
-		#self.output_size = output_size
-		self.hidden_size = hidden_size
-		self.att_weights = nn.Parameter(torch.Tensor(1, hidden_size),requires_grad=True)
-
-		init.kaiming_uniform_(self.att_weights)
-
-	def forward(self, inputs):
-
-		batch_size = inputs.size(0)
-		weights = torch.bmm(inputs, self.att_weights.permute(1, 0).unsqueeze(0).repeat(batch_size, 1, 1))
-
-		if inputs.size(0)==1:
-			attentions = F.softmax(torch.tanh(weights),dim=1)
-			weighted = torch.mul(inputs, attentions.expand_as(inputs))
-		else:
-			attentions = F.softmax(torch.tanh(weights.squeeze()),dim=1)
-			weighted = torch.mul(inputs, attentions.unsqueeze(2).expand_as(inputs))
-
-		noise = 1e-5*torch.randn(weighted.size())
-
-		if inputs.is_cuda:
-			noise = noise.to(inputs.device)
-
-		avg_repr, std_repr = weighted.sum(1), (weighted+noise).std(1)
-
-		representations = torch.cat((avg_repr,std_repr),1)
-
-		return representations
-
-class PreActBlock(nn.Module):
-	'''Pre-activation version of the BasicBlock.'''
-	expansion = 1
-
-	def __init__(self, in_planes, planes, stride=1):
-		super(PreActBlock, self).__init__()
-		self.bn1 = nn.BatchNorm2d(in_planes)
-		self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
-		self.bn2 = nn.BatchNorm2d(planes)
-		self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
-
-		if stride != 1 or in_planes != self.expansion*planes:
-			self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False))
-
-	def forward(self, x):
-		out = F.relu(self.bn1(x))
-		shortcut = self.shortcut(out) if hasattr(self, 'shortcut') else x
-		out = self.conv1(out)
-		out = self.conv2(F.relu(self.bn2(out)))
-		out += shortcut
-		return out
+RESNET_CONFIGS = {'18':[[2,2,2,2], PreActBlock], '34':[[3,4,6,3], PreActBlock], '50':[[3,4,6,3], PreActBottleneck], '101':[[3,4,23,3], PreActBottleneck]}
 
 class ResNet(nn.Module):
-	def __init__(self, layers=[2,2,2,2], block=PreActBlock, nclasses=-1):
+	def __init__(self, resnet_type='18', nclasses=-1):
 		self.in_planes = 16
 		super(ResNet, self).__init__()
+
+		layers, block = RESNET_CONFIGS[resnet_type]
 	
 		self.conv1 = nn.Conv2d(1, 16, kernel_size=(9,3), stride=(3,1), padding=(1,1), bias=False)
 		self.bn1 = nn.BatchNorm2d(16)
@@ -133,17 +162,17 @@ class ResNet(nn.Module):
 		self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
 		self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
 
-		self.conv5 = nn.Conv2d(512, 256, kernel_size=(11,3), stride=(1,1), padding=(0,1), bias=False)
+		self.conv5 = nn.Conv2d(512*block.expansion, 256, kernel_size=(11,3), stride=(1,1), padding=(0,1), bias=False)
 		self.bn5 = nn.BatchNorm2d(256)
 
-		self.fc = nn.Linear(block.expansion*256*2,256)
+		self.fc = nn.Linear(256*2,256)
 		self.lbn = nn.BatchNorm1d(256)
 
 		self.fc_mu = nn.Linear(256, nclasses) if nclasses>2 else nn.Linear(256, 1)
 
 		self.initialize_params()
 
-		self.attention = SelfAttention(block.expansion*256)
+		self.attention = SelfAttention(256)
 
 	def initialize_params(self):
 
@@ -174,6 +203,7 @@ class ResNet(nn.Module):
 		x = self.layer4(x)
 		x = self.conv5(x)
 		x = self.activation(self.bn5(x)).squeeze(2)
+		print('hahahahaha', x.size())
 		stats = self.attention(x.permute(0,2,1).contiguous())
 		fc = F.relu(self.lbn(self.fc(stats)))
 		mu = self.fc_mu(fc)
@@ -183,9 +213,11 @@ class ResNet(nn.Module):
 		return mu
 
 class ResNet_pca(nn.Module):
-	def __init__(self, layers=[2,2,2,2], block=PreActBlock, nclasses=-1):
+	def __init__(self, resnet_type='18', nclasses=-1):
 		self.in_planes = 16
 		super(ResNet_pca, self).__init__()
+
+		layers, block = RESNET_CONFIGS[resnet_type]
 	
 		self.conv1 = nn.Conv2d(1, 16, kernel_size=(9,3), stride=(3,1), padding=(1,1), bias=False)
 		self.bn1 = nn.BatchNorm2d(16)
@@ -196,17 +228,17 @@ class ResNet_pca(nn.Module):
 		self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
 		self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
 
-		self.conv5 = nn.Conv2d(512, 256, kernel_size=(5,3), stride=(1,1), padding=(0,1), bias=False)
+		self.conv5 = nn.Conv2d(512*block.expansion, 256, kernel_size=(5,3), stride=(1,1), padding=(0,1), bias=False)
 		self.bn5 = nn.BatchNorm2d(256)
 
-		self.fc = nn.Linear(block.expansion*256*2,256)
+		self.fc = nn.Linear(256*2,256)
 		self.lbn = nn.BatchNorm1d(256)
 
 		self.fc_mu = nn.Linear(256, nclasses) if nclasses>2 else nn.Linear(256, 1)
 
 		self.initialize_params()
 
-		self.attention = SelfAttention(block.expansion*256)
+		self.attention = SelfAttention(256)
 
 	def initialize_params(self):
 
@@ -250,9 +282,11 @@ class ResNet_pca(nn.Module):
 		return mu
 
 class ResNet_CC(nn.Module):
-	def __init__(self, n_z=256, layers=[2,2,2,2], block=PreActBlock, nclasses=-1, ncoef=90, init_coef=0):
+	def __init__(self, n_z=256, resnet_type='18', nclasses=-1, ncoef=90, init_coef=0):
 		self.in_planes = 16
 		super(ResNet_CC, self).__init__()
+
+		layers, block = RESNET_CONFIGS[resnet_type]
 
 		self.ncoef=ncoef
 		self.init_coef=init_coef
