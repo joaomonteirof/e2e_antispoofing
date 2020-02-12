@@ -32,7 +32,7 @@ class TrainLoop(object):
 		self.logger = logger
 
 		if self.valid_loader is not None:
-			self.history = {'train_loss': [], 'train_loss_batch': [], 'valid_loss': []}
+			self.history = {'train_loss': [], 'train_loss_batch': [], 'valid_loss': [], 'valid_eer': []}
 		else:
 			self.history = {'train_loss': [], 'train_loss_batch': []}
 
@@ -62,11 +62,11 @@ class TrainLoop(object):
 
 			if self.valid_loader is not None:
 
-				scores, labels = None, None
+				scores, labels, valid_loss_epoch = None, None, 0.0
 
 				for t, batch in enumerate(self.valid_loader):
-					scores_batch, labels_batch = self.valid(batch)
-
+					scores_batch, labels_batch, valid_loss = self.valid(batch)
+					valid_loss_epoch+=valid_loss
 					try:
 						scores = np.concatenate([scores, scores_batch], 0)
 						labels = np.concatenate([labels, labels_batch], 0)
@@ -74,10 +74,13 @@ class TrainLoop(object):
 						scores, labels = scores_batch, labels_batch
 
 				self.history['valid_loss'].append(compute_eer(labels, scores))
+				self.history['valid_eer'].append(valid_loss_epoch/(t+1))
 
 				if self.logger:
-					self.logger.add_scalar('Valid/EER', self.history['valid_loss'][-1], self.total_iters)
-					self.logger.add_scalar('Valid/Best EER', np.min(self.history['valid_loss']), self.total_iters)
+					self.logger.add_scalar('Valid/EER', self.history['valid_eer'][-1], self.total_iters)
+					self.logger.add_scalar('Valid/Best EER', np.min(self.history['valid_eer']), self.total_iters)
+					self.logger.add_scalar('Valid/Valid_loss', self.history['valid_loss'][-1], self.total_iters)
+					self.logger.add_scalar('Valid/Best valid_loss', np.min(self.history['valid_loss']), self.total_iters)
 					self.logger.add_pr_curve('Valid. ROC', labels=labels, predictions=scores, global_step=self.total_iters)
 					self.logger.add_histogram('Valid/Scores', values=scores, global_step=self.total_iters)
 					self.logger.add_histogram('Valid/Labels', values=labels, global_step=self.total_iters)
@@ -139,8 +142,9 @@ class TrainLoop(object):
 				utterances, y = utterances.to(self.device), y.to(self.device)
 
 			pred = self.model.forward(utterances)
+			loss = torch.nn.BCEWithLogitsLoss()(pred, y)
 
-		return torch.sigmoid(pred).detach().cpu().numpy().squeeze(), y.cpu().numpy().squeeze()
+		return torch.sigmoid(pred).detach().cpu().numpy().squeeze(), y.cpu().numpy().squeeze(), loss.item()
 
 	def checkpointing(self):
 

@@ -110,6 +110,7 @@ if __name__ == '__main__':
 	print('Start of scores computation')
 
 	score_list = []
+	pred_list = []
 	skipped_utterances = 0
 
 	with torch.no_grad():
@@ -128,15 +129,18 @@ if __name__ == '__main__':
 					feats = feats.to(device)
 					model = model.to(device)
 
-				score = 1.-torch.sigmoid(model.forward(feats)).item()
+				pred = torch.sigmoid(model.forward(feats)).item()
+				score = 1.-pred
 
 			except:
 				feats = feats.cpu()
 				model = model.cpu()
 
-				score = 1.-torch.sigmoid(model.forward(feats)).item()
+				pred = torch.sigmoid(model.forward(feats)).item()
+				score = 1.-pred
 
 			score_list.append(score)
+			pred_list.append(pred)
 
 	if not args.no_output_file:
 
@@ -153,6 +157,7 @@ if __name__ == '__main__':
 
 	if not args.no_eer and not args.eval and args.trials_path:
 		print('EER: {}'.format(compute_eer_labels(label_list, score_list)))
+		print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(pred), torch.Tensor(y)))
 
 	print('All done!!')
 	print('\nTotal skipped trials: {}'.format(skipped_utterances))
