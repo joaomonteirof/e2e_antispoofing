@@ -86,6 +86,8 @@ if __name__ == '__main__':
 		model_la = model_.ResNet_CC(ncoef=args.ncoef_la, resnet_type=args.resnet_type_la)
 	elif args.model_la == 'TDNN':
 		model_la = model_.TDNN(ncoef=args.ncoef_la)
+	elif args.model_la == 'Linear':
+		model_la = model_.Linear(ncoef=args.ncoef_la)
 
 	if args.model_pa == 'lstm':
 		model_pa = model_.cnn_lstm()
@@ -113,6 +115,8 @@ if __name__ == '__main__':
 		model_pa = model_.ResNet_CC(ncoef=args.ncoef_pa, resnet_type=args.resnet_type_pa)
 	elif args.model_pa == 'TDNN':
 		model_pa = model_.TDNN(ncoef=args.ncoef_pa)
+	elif args.model_pa == 'Linear':
+		model_pa = model_.Linear(ncoef=args.ncoef_pa)
 
 	if args.model_mix == 'lstm':
 		model_mix = model_.cnn_lstm()
@@ -140,6 +144,8 @@ if __name__ == '__main__':
 		model_mix = model_.ResNet_CC(ncoef=args.ncoef_mix, resnet_type=args.resnet_type_mix)
 	elif args.model_mix == 'TDNN':
 		model_mix = model_.TDNN(ncoef=args.ncoef_mix)
+	elif args.model_mix == 'Linear':
+		model_mix = model_.Linear(ncoef=args.ncoef_mix)
 
 	print('Loading model')
 

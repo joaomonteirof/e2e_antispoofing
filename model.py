@@ -916,3 +916,22 @@ class TDNN(nn.Module):
 
 		return out
 
+class Linear(nn.Module):
+	def __init__(self, nclasses=-1, ncoef=90, init_coef=0):
+		super(Linear, self).__init__()
+
+		self.ncoef=ncoef
+		self.init_coef=init_coef
+
+		self.pooling = StatisticalPooling()
+
+		self.post_pooling = nn.Sequential( nn.Linear(2*(ncoef-init_coef), nclasses) if nclasses>2 else nn.Linear(2*(ncoef-init_coef), 1) )
+
+	def forward(self, x):
+
+		x = x[:,:,self.init_coef:,:].squeeze(1)
+		x = self.pooling(x)
+		out = self.post_pooling(x)
+
+		return out
+
