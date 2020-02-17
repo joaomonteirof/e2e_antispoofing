@@ -134,7 +134,7 @@ elif args.model_pa == 'resnet_CC':
 elif args.model_pa == 'TDNN':
 	model_pa = model_.TDNN(ncoef=args.ncoef_pa)
 elif args.model_pa == 'Linear':
-	model_la = model_.Linear(ncoef=args.ncoef_pa)
+	model_pa = model_.Linear(ncoef=args.ncoef_pa)
 
 if args.model_mix == 'lstm':
 	model_mix = model_.cnn_lstm()
