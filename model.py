@@ -319,8 +319,6 @@ class ResNet(nn.Module):
 		x = self.layer4(x)
 		x = self.conv5(x)
 		x = self.activation(self.bn5(x)).squeeze(2)
-
-		print('hahaha',x.size())
 		
 		stats = self.attention(x.permute(0,2,1).contiguous())
 		fc = F.relu(self.lbn(self.fc(stats)))
