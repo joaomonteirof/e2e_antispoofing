@@ -220,25 +220,25 @@ if __name__ == '__main__':
 				pred_mix = model_mix.forward(feats_mix).squeeze()
 
 			if args.train_mode == 'mix':
-				mixture_coef = torch.sigmoid(pred_mix).squeeze()
-				score_all = torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).squeeze().cpu().item()
-				score_la = torch.sigmoid(pred_la).squeeze().cpu().item()
-				score_pa = torch.sigmoid(pred_pa).squeeze().cpu().item()
-				score_mix = 2*abs(mixture_coef.cpu().item()-0.5)
+				mixture_coef = 1.0-torch.sigmoid(pred_mix).squeeze()
+				score_all = 1.0-torch.sigmoid(mixture_coef*pred_la + (1.-mixture_coef)*pred_pa).squeeze().cpu().item()
+				score_la = 1.0-torch.sigmoid(pred_la).squeeze().cpu().item()
+				score_pa = 1.0-torch.sigmoid(pred_pa).squeeze().cpu().item()
+				score_mix = 1.0-2*abs(mixture_coef.cpu().item()-0.5)
 				score_fusion = (score_all+score_la+score_pa+score_mix)/4.
 
 			elif args.train_mode == 'lapa':
 				score_all = 0.0
-				score_la = 2*abs(torch.sigmoid(pred_la)-0.5).cpu().numpy().item()
-				score_pa = 2*abs(torch.sigmoid(pred_pa)-0.5).cpu().numpy().item()
-				score_mix = 2*abs(torch.sigmoid(pred_mix)-0.5).cpu().numpy().item()
+				score_la = 1.0-2*abs(torch.sigmoid(pred_la)-0.5).cpu().numpy().item()
+				score_pa = 1.0-2*abs(torch.sigmoid(pred_pa)-0.5).cpu().numpy().item()
+				score_mix = 1.0-2*abs(torch.sigmoid(pred_mix)-0.5).cpu().numpy().item()
 				score_fusion = (score_la+score_pa+score_mix)/3.
 
 			elif args.train_mode == 'independent':
 				score_all = 0.0
-				score_la = torch.sigmoid(pred_la).cpu().numpy().item()
-				score_pa = torch.sigmoid(pred_pa).cpu().numpy().item()
-				score_mix = torch.sigmoid(pred_mix).cpu().numpy().item()
+				score_la = 1.0-torch.sigmoid(pred_la).cpu().numpy().item()
+				score_pa = 1.0-torch.sigmoid(pred_pa).cpu().numpy().item()
+				score_mix = 1.0-torch.sigmoid(pred_mix).cpu().numpy().item()
 				score_fusion = (score_la+score_pa+score_mix)/3.
 
 			scores['all'].append(score_all)
