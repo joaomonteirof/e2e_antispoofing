@@ -26,7 +26,8 @@ def prep_feats(data_):
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Compute scores')
-	parser.add_argument('--path-to-data', type=str, default='./data/feats.scp', metavar='Path', help='Path to input data')
+	parser.add_argument('--path1-to-data', type=str, default='./data/feats1.scp', metavar='Path', help='Path to input data 1')
+	parser.add_argument('--path2-to-data', type=str, default='./data/feats1.scp', metavar='Path', help='Path to input data 2')
 	parser.add_argument('--trials-path', type=str, default=None, metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp1-path', type=str, default=None, metavar='Path', help='Path for file containing first model')
 	parser.add_argument('--cp2-path', type=str, default=None, metavar='Path', help='Path for file containing second model')
@@ -126,7 +127,8 @@ if __name__ == '__main__':
 
 	print('Loading data')
 
-	data = { k:m for k,m in read_mat_scp(args.path_to_data) }
+	data1 = { k:m for k,m in read_mat_scp(args.path1_to_data) }
+	data2 = { k:m for k,m in read_mat_scp(args.path2_to_data) }
 
 	if args.trials_path:
 		if args.eval:
@@ -134,10 +136,7 @@ if __name__ == '__main__':
 		else:
 			test_utts, attack_type_list, label_list = read_trials(args.trials_path, eval_=args.eval)
 	else:
-		test_utts = list(data.keys())
-
-	if args.tandem:
-		data = change_keys(data)
+		test_utts = list(data1.keys())
 
 	print('Data loaded')
 
@@ -155,7 +154,8 @@ if __name__ == '__main__':
 		for i, utt in enumerate(test_utts):
 
 			try:
-				feats = prep_feats(data[utt])
+				feats1 = prep_feats(data1[utt])
+				feats2 = prep_feats(data2[utt])
 			except KeyError:
 				print('\nSkipping utterance {}. Not found within the data\n'.format(utt))
 				skipped_utterances+=1
@@ -163,12 +163,13 @@ if __name__ == '__main__':
 
 			try:
 				if args.cuda:
-					feats = feats.to(device)
+					feats1 = feats1.to(device)
+					feats2 = feats2.to(device)
 					model1 = model1.to(device)
 					model2 = model2.to(device)
 
-				pred1 = torch.sigmoid(model1.forward(feats)).item()
-				pred2 = torch.sigmoid(model2.forward(feats)).item()
+				pred1 = torch.sigmoid(model1.forward(feats1)).item()
+				pred2 = torch.sigmoid(model2.forward(feats2)).item()
 				pred_max = max(pred1, pred2)
 				pred_min = min(pred1, pred2)
 				pred_avg = 0.5*(pred1 + pred2)
@@ -180,8 +181,8 @@ if __name__ == '__main__':
 				feats = feats.cpu()
 				model = model.cpu()
 
-				pred1 = torch.sigmoid(model1.forward(feats)).item()
-				pred2 = torch.sigmoid(model2.forward(feats)).item()
+				pred1 = torch.sigmoid(model1.forward(feats1)).item()
+				pred2 = torch.sigmoid(model2.forward(feats2)).item()
 				pred_max = max(pred1, pred2)
 				pred_min = min(pred1, pred2)
 				pred_avg = 0.5*(pred1 + pred2)
