@@ -52,7 +52,9 @@ if __name__ == '__main__':
 		raise ValueError('There is no checkpoint/model path. Use arg --cp1-path and --cp2-path to indicate the paths!')
 
 	print('Cuda Mode is: {}'.format(args.cuda))
-	print('Selected model is: {}'.format(args.model))
+	print('Selected models are:')
+	print('\n', args.model1)
+	print(args.model2, '\n')
 
 	if args.cuda:
 		device = get_freer_gpu()
