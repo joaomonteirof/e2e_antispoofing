@@ -37,12 +37,14 @@ if __name__ == '__main__':
 	parser.add_argument('--model2', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN'], default='lcnn_9', help='Model arch')
 	parser.add_argument('--resnet2-type', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
+	parser.add_argument('--prefix', type=str, default='./scores', metavar='Path', help='prefix for score files names')
 	parser.add_argument('--no-output-file', action='store_true', default=False, help='Disables writing scores into out file')
 	parser.add_argument('--no-eer', action='store_true', default=False, help='Disables computation of EER')
 	parser.add_argument('--eval', action='store_true', default=False, help='Enables eval trials reading')
-	parser.add_argument('--tandem', action='store_true', default=False, help='Scoring with tandem features')
-	parser.add_argument('--ncoef', type=int, default=90, metavar='N', help='Number of cepstral coefs (default: 90)')
-	parser.add_argument('--init-coef', type=int, default=0, metavar='N', help='First cepstral coefs (default: 0)')
+	parser.add_argument('--ncoef1', type=int, default=90, metavar='N', help='Number of cepstral coefs (default: 90)')
+	parser.add_argument('--init-coef1', type=int, default=0, metavar='N', help='First cepstral coefs (default: 0)')
+	parser.add_argument('--ncoef2', type=int, default=90, metavar='N', help='Number of cepstral coefs (default: 90)')
+	parser.add_argument('--init-coef2', type=int, default=0, metavar='N', help='First cepstral coefs (default: 0)')
 	args = parser.parse_args()
 	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
@@ -62,9 +64,9 @@ if __name__ == '__main__':
 	if args.model1 == 'lstm':
 		model1 = model_.cnn_lstm()
 	elif args.model1 == 'resnet':
-		model1 = model_.ResNet(resnet_type=args.resnet_type)
+		model1 = model_.ResNet(resnet_type=args.resnet1_type)
 	elif args.model1 == 'resnet_pca':
-		model1 = model_.ResNet_pca(resnet_type=args.resnet_type)
+		model1 = model_.ResNet_pca(resnet_type=args.resnet1_type)
 	elif args.model1 == 'lcnn_9':
 		model1 = model_.lcnn_9layers()
 	elif args.model1 == 'lcnn_29':
@@ -78,20 +80,20 @@ if __name__ == '__main__':
 	elif args.model1 == 'lcnn_9_prodspec':
 		model1 = model_.lcnn_9layers_prodspec()
 	elif args.model1 == 'lcnn_9_CC':
-		model1 = model_.lcnn_9layers_CC(ncoef=args.ncoef, init_coef=args.init_coef)
+		model1 = model_.lcnn_9layers_CC(ncoef=args.ncoef1, init_coef=args.init_coef1)
 	elif args.model1 == 'lcnn_29_CC':
-		model1 = model_.lcnn_29layers_CC(ncoef=args.ncoef, init_coef=args.init_coef)
+		model1 = model_.lcnn_29layers_CC(ncoef=args.ncoef1, init_coef=args.init_coef1)
 	elif args.model1 == 'resnet_CC':
-		model1 = model_.ResNet_CC(ncoef=args.ncoef, init_coef=args.init_coef, resnet_type=args.resnet_type)
+		model1 = model_.ResNet_CC(ncoef=args.ncoef1, init_coef=args.init_coef1, resnet_type=args.resnet1_type)
 	elif args.model1 == 'TDNN':
-		model1 = model_.TDNN(ncoef=args.ncoef, init_coef=args.init_coef)
+		model1 = model_.TDNN(ncoef=args.ncoef1, init_coef=args.init_coef1)
 
 	if args.model2 == 'lstm':
 		model2 = model_.cnn_lstm()
 	elif args.model2 == 'resnet':
-		model2 = model_.ResNet(resnet_type=args.resnet_type)
+		model2 = model_.ResNet(resnet_type=args.resnet2_type)
 	elif args.model2 == 'resnet_pca':
-		model2 = model_.ResNet_pca(resnet_type=args.resnet_type)
+		model2 = model_.ResNet_pca(resnet_type=args.resnet2_type)
 	elif args.model2 == 'lcnn_9':
 		model2 = model_.lcnn_9layers()
 	elif args.model2 == 'lcnn_29':
@@ -105,13 +107,13 @@ if __name__ == '__main__':
 	elif args.model2 == 'lcnn_9_prodspec':
 		model2 = model_.lcnn_9layers_prodspec()
 	elif args.model2 == 'lcnn_9_CC':
-		model2 = model_.lcnn_9layers_CC(ncoef=args.ncoef, init_coef=args.init_coef)
+		model2 = model_.lcnn_9layers_CC(ncoef=args.ncoef2, init_coef=args.init_coef2)
 	elif args.model2 == 'lcnn_29_CC':
-		model2 = model_.lcnn_29layers_CC(ncoef=args.ncoef, init_coef=args.init_coef)
+		model2 = model_.lcnn_29layers_CC(ncoef=args.ncoef2, init_coef=args.init_coef2)
 	elif args.model2 == 'resnet_CC':
-		model2 = model_.ResNet_CC(ncoef=args.ncoef, init_coef=args.init_coef, resnet_type=args.resnet_type)
+		model2 = model_.ResNet_CC(ncoef=args.ncoef2, init_coef=args.init_coef2, resnet_type=args.resnet2_type)
 	elif args.model2 == 'TDNN':
-		model2 = model_.TDNN(ncoef=args.ncoef, init_coef=args.init_coef)
+		model2 = model_.TDNN(ncoef=args.ncoef2, init_coef=args.init_coef2)
 
 	print('Loading model1')
 
@@ -219,6 +221,6 @@ if __name__ == '__main__':
 			print('\nPerformance of scores of type {}'.format(score_types))
 			print('EER: {}'.format(compute_eer_labels(label_list, scores[score_types])))
 			print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(preds[score_types]), torch.Tensor(y))))
-	
+
 	print('All done!!')
 	print('\nTotal skipped trials: {}'.format(skipped_utterances))
