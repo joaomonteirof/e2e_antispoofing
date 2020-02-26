@@ -204,7 +204,7 @@ if __name__ == '__main__':
 
 		for score_type in score_types:
 
-			file_name = os.path.join(args.out_path, args.prefix, score_type,'.txt')
+			file_name = os.path.join(args.out_path, args.prefix+score_type+'.txt')
 
 			with open(file_name, 'w') as f:
 				if args.eval or args.trials_path is None:
