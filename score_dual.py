@@ -216,9 +216,9 @@ if __name__ == '__main__':
 
 	if not args.no_eer and not args.eval and args.trials_path:
 		for score_type in score_types:
-			print('\nPerformance of scores of type {}'.format(score_types))
-			print('EER: {}'.format(compute_eer_labels(label_list, scores[score_types])))
-			print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(preds[score_types]), torch.Tensor(y))))
+			print('\nPerformance of scores of type {}'.format(score_type))
+			print('EER: {}'.format(compute_eer_labels(label_list, scores[score_type])))
+			print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(preds[score_type]), torch.Tensor(y))))
 
 	print('All done!!')
 	print('\nTotal skipped trials: {}'.format(skipped_utterances))
