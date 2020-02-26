@@ -218,7 +218,7 @@ if __name__ == '__main__':
 		for score_type in score_types:
 			print('\nPerformance of scores of type {}'.format(score_type))
 			print('EER: {}'.format(compute_eer_labels(label_list, scores[score_type])))
-			print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(preds[score_type]), torch.Tensor(y))))
+			print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(preds[score_type]), torch.Tensor(label_list))))
 
 	print('All done!!')
 	print('\nTotal skipped trials: {}'.format(skipped_utterances))
