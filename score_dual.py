@@ -7,6 +7,7 @@ import os
 from kaldi_io import read_mat_scp
 import model as model_
 import scipy.io as sio
+from sklearn import preprocessing
 
 from utils import compute_eer_labels, get_freer_gpu, read_trials, change_keys
 
@@ -135,6 +136,8 @@ if __name__ == '__main__':
 			test_utts = read_trials(args.trials_path, eval_=args.eval)
 		else:
 			test_utts, attack_type_list, label_list = read_trials(args.trials_path, eval_=args.eval)
+			lb = preprocessing.LabelBinarizer()
+			y = torch.Tensor(lb.fit_transform(label_list)).squeeze(-1)
 	else:
 		test_utts = list(data1.keys())
 
@@ -218,7 +221,7 @@ if __name__ == '__main__':
 		for score_type in score_types:
 			print('\nPerformance of scores of type {}'.format(score_type))
 			print('EER: {}'.format(compute_eer_labels(label_list, scores[score_type])))
-			print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(preds[score_type]), torch.Tensor(label_list))))
+			print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(preds[score_type]), y)))
 
 	print('All done!!')
 	print('\nTotal skipped trials: {}'.format(skipped_utterances))
