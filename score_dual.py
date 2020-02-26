@@ -48,12 +48,8 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
-	if args.cp_path is None:
-		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
-
-	if os.path.isfile(args.out_path):
-		os.remove(args.out_path)
-		print(args.out_path + ' Removed')
+	if args.cp1_path is None or args.cp2_path is None:
+		raise ValueError('There is no checkpoint/model path. Use arg --cp1-path and --cp2-path to indicate the paths!')
 
 	print('Cuda Mode is: {}'.format(args.cuda))
 	print('Selected model is: {}'.format(args.model))
