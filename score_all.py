@@ -37,9 +37,9 @@ if __name__ == '__main__':
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./', metavar='Path', help='Path to output hdf file')
 	parser.add_argument('--prefix', type=str, default='./scores', metavar='Path', help='prefix for score files names')
-	parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN'], default='lcnn_29_CC', help='Model arch')
-	parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN'], default='lcnn_9_prodspec', help='Model arch')
-	parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN'], default='lcnn_29_CC', help='Model arch')
+	parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN'], default='lcnn_29_CC', help='Model arch')
+	parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN'], default='lcnn_9_prodspec', help='Model arch')
+	parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN'], default='lcnn_29_CC', help='Model arch')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	parser.add_argument('--no-output-file', action='store_true', default=False, help='Disables writing scores into out file')
 	parser.add_argument('--no-eer', action='store_true', default=False, help='Disables computation of EER')
@@ -86,6 +86,8 @@ if __name__ == '__main__':
 		model_la = model_.ResNet_CC(ncoef=args.ncoef_la, resnet_type=args.resnet_type_la)
 	elif args.model_la == 'TDNN':
 		model_la = model_.TDNN(ncoef=args.ncoef_la)
+	elif args.model_la == 'FTDNN':
+		model_la = model_.FTDNN(ncoef=args.ncoef_la)
 	elif args.model_la == 'Linear':
 		model_la = model_.Linear(ncoef=args.ncoef_la)
 
@@ -115,6 +117,8 @@ if __name__ == '__main__':
 		model_pa = model_.ResNet_CC(ncoef=args.ncoef_pa, resnet_type=args.resnet_type_pa)
 	elif args.model_pa == 'TDNN':
 		model_pa = model_.TDNN(ncoef=args.ncoef_pa)
+	elif args.model_pa == 'FTDNN':
+		model_pa = model_.FTDNN(ncoef=args.ncoef_pa)
 	elif args.model_pa == 'Linear':
 		model_pa = model_.Linear(ncoef=args.ncoef_pa)
 
@@ -143,6 +147,8 @@ if __name__ == '__main__':
 	elif args.model_mix == 'resnet_CC':
 		model_mix = model_.ResNet_CC(ncoef=args.ncoef_mix, resnet_type=args.resnet_type_mix)
 	elif args.model_mix == 'TDNN':
+		model_mix = model_.FTDNN(ncoef=args.ncoef_mix)
+	elif args.model_mix == 'FTDNN':
 		model_mix = model_.TDNN(ncoef=args.ncoef_mix)
 	elif args.model_mix == 'Linear':
 		model_mix = model_.Linear(ncoef=args.ncoef_mix)
