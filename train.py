@@ -2,12 +2,11 @@ from __future__ import print_function
 import argparse
 import torch
 from train_loop import TrainLoop
-from train_loop_mcc import TrainLoop_mcc
 import torch.optim as optim
 import torch.utils.data
 import model as model_
 import numpy as np
-from data_load import Loader, Loader_mcc
+from data_load import Loader
 from torch.utils.tensorboard import SummaryWriter
 from utils import *
 
@@ -34,13 +33,14 @@ parser.add_argument('--save-every', type=int, default=1, metavar='N', help='how 
 parser.add_argument('--n-frames', type=int, default=1000, metavar='N', help='maximum number of frames per utterance (default: 1000)')
 parser.add_argument('--n-cycles', type=int, default=30000, metavar='N', help='number of examples to complete 1 epoch')
 parser.add_argument('--valid-n-cycles', type=int, default=1000, metavar='N', help='number of examples to complete 1 epoch')
-parser.add_argument('--n-classes', type=int, default=-1, metavar='N', help='Number of classes for the mcc case (default: binary classification)')
 parser.add_argument('--ncoef', type=int, default=90, metavar='N', help='Number of cepstral coefs for the LA case (default: 90)')
 parser.add_argument('--init-coef', type=int, default=0, metavar='N', help='First cepstral coefs (default: 0)')
 parser.add_argument('--lists-path', type=str, default=None, metavar='Path', help='Path to list files per attack')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
+
+print(args)
 
 if args.cuda:
 	device = get_freer_gpu()
@@ -56,12 +56,7 @@ torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
 
-if args.n_classes>2:
-	assert args.lists_path is not None, 'Pass the path for the lists of utterances per attack'
-	train_dataset = Loader_mcc(hdf5_clean = args.train_hdf_path+'train_clean.hdf', hdf5_attack = args.train_hdf_path+'train_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.n_cycles, file_lists_path=args.lists_path)
-else:
-	train_dataset = Loader(hdf5_clean = args.train_hdf_path+'train_clean.hdf', hdf5_attack = args.train_hdf_path+'train_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.n_cycles)
-
+train_dataset = Loader(hdf5_clean = args.train_hdf_path+'train_clean.hdf', hdf5_attack = args.train_hdf_path+'train_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.n_cycles)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 
 if args.valid_hdf_path is not None:
@@ -74,33 +69,33 @@ else:
 	valid_loader=None
 
 if args.model == 'lstm':
-	model = model_.cnn_lstm(nclasses=args.n_classes)
+	model = model_.cnn_lstm()
 elif args.model == 'resnet':
-	model = model_.ResNet(nclasses=args.n_classes, resnet_type=args.resnet_type)
+	model = model_.ResNet(resnet_type=args.resnet_type)
 elif args.model == 'resnet_pca':
-	model = model_.ResNet_pca(nclasses=args.n_classes, resnet_type=args.resnet_type)
+	model = model_.ResNet_pca(resnet_type=args.resnet_type)
 elif args.model == 'lcnn_9':
-	model = model_.lcnn_9layers(nclasses=args.n_classes)
+	model = model_.lcnn_9layers()
 elif args.model == 'lcnn_29':
-	model = model_.lcnn_29layers_v2(nclasses=args.n_classes)
+	model = model_.lcnn_29layers_v2()
 elif args.model == 'lcnn_9_pca':
-	model = model_.lcnn_9layers_pca(nclasses=args.n_classes)
+	model = model_.lcnn_9layers_pca()
 elif args.model == 'lcnn_29_pca':
-	model = model_.lcnn_29layers_v2_pca(nclasses=args.n_classes)
+	model = model_.lcnn_29layers_v2_pca()
 elif args.model == 'lcnn_9_icqspec':
-	model = model_.lcnn_9layers_icqspec(nclasses=args.n_classes)
+	model = model_.lcnn_9layers_icqspec()
 elif args.model == 'lcnn_9_prodspec':
-	model = model_.lcnn_9layers_prodspec(nclasses=args.n_classes)
+	model = model_.lcnn_9layers_prodspec()
 elif args.model == 'lcnn_9_CC':
-	model = model_.lcnn_9layers_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
+	model = model_.lcnn_9layers_CC(ncoef=args.ncoef, init_coef=args.init_coef)
 elif args.model == 'lcnn_29_CC':
-	model = model_.lcnn_29layers_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
+	model = model_.lcnn_29layers_CC(ncoef=args.ncoef, init_coef=args.init_coef)
 elif args.model == 'resnet_CC':
-	model = model_.ResNet_CC(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef, resnet_type=args.resnet_type)
+	model = model_.ResNet_CC(ncoef=args.ncoef, init_coef=args.init_coef, resnet_type=args.resnet_type)
 elif args.model == 'TDNN':
-	model = model_.TDNN(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
+	model = model_.TDNN(ncoef=args.ncoef, init_coef=args.init_coef)
 elif args.model == 'FTDNN':
-	model = model_.FTDNN(nclasses=args.n_classes, ncoef=args.ncoef, init_coef=args.init_coef)
+	model = model_.FTDNN(ncoef=args.ncoef, init_coef=args.init_coef)
 
 if args.pretrained_path is not None:
 	ckpt = torch.load(args.pretrained_path, map_location = lambda storage, loc: storage)
@@ -118,10 +113,7 @@ model = model.to(device)
 
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 
-if args.n_classes>2:
-	trainer = TrainLoop_mcc(model, optimizer, train_loader, valid_loader, patience=args.patience, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
-else:
-	trainer = TrainLoop(model, optimizer, train_loader, valid_loader, patience=args.patience, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, logger=writer)
+trainer = TrainLoop(model, optimizer, train_loader, valid_loader, patience=args.patience, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, logger=writer)
 
 print('Cuda Mode: {}'.format(args.cuda))
 print('Device: {}'.format(device))
