@@ -122,7 +122,7 @@ def read_labels(path):
 		utt_list.append(utt)
 		label_list.append(label.strip('\n'))
 
-	return utt_list, attack_type_list, label_list
+	return utt_list, label_list
 
 def change_keys(data_dict):
 
