@@ -72,7 +72,7 @@ if __name__ == '__main__':
 				f.write("%s" % ' '.join([utt, str(score_list[i])+'\n']))
 
 	print('EER: {}'.format(compute_eer_labels(label_list, score_list)))
-	print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(pred), y)))
+	print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(pred_list), y)))
 
 	print('All done!!')
 	print('\nTotal skipped trials: {}'.format(skipped_utterances))

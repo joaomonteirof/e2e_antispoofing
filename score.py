@@ -161,7 +161,7 @@ if __name__ == '__main__':
 
 	if not args.no_eer and not args.eval and args.trials_path:
 		print('EER: {}'.format(compute_eer_labels(label_list, score_list)))
-		print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(pred), y)))
+		print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(pred_list), y)))
 
 	print('All done!!')
 	print('\nTotal skipped trials: {}'.format(skipped_utterances))
