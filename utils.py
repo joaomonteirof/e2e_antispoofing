@@ -143,7 +143,7 @@ def get_utt2score(path):
 
 	for row in rows:
 		utt_score = row.strip('\n').split(' ')
-		utt2score_dict[utt_score[0]] = float(utt_score[1:])
+		utt2score_dict[utt_score[0]] = float(utt_score[1])
 
 	return utt2score_dict
 
