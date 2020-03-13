@@ -8,7 +8,7 @@ from kaldi_io import read_mat_scp
 import model as model_
 import scipy.io as sio
 from sklearn import preprocessing
-from utils import compute_eer_labels, read_scores, get_utt2score
+from utils import compute_eer_labels, read_labels, get_utt2score
 
 def prep_feats(data_):
 
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 		os.remove(args.out_path)
 		print(args.out_path + ' Removed')
 
-	test_utts, label_list = read_trials(args.trials_path, eval_=args.eval)
+	test_utts, label_list = read_labels(args.trials_path, eval_=args.eval)
 	utt2score = get_utt2score(args.scores_path)
 	lb = preprocessing.LabelBinarizer()
 	y = torch.Tensor(lb.fit_transform(label_list)).squeeze(-1)
