@@ -111,6 +111,19 @@ def read_trials(path, eval_=False):
 
 		return utt_list, attack_type_list, label_list
 
+def read_labels(path):
+	with open(path, 'r') as file:
+		utt_labels = file.readlines()
+
+	utt_list, label_list = [], []
+
+	for line in utt_labels:
+		utt, label = line.split(' ')
+		utt_list.append(utt)
+		label_list.append(label.strip('\n'))
+
+	return utt_list, attack_type_list, label_list
+
 def change_keys(data_dict):
 
 	keys_=list(data_dict.keys())
@@ -121,6 +134,18 @@ def change_keys(data_dict):
 		data_dict[new_k] = data_dict.pop(k)
 
 	return data_dict
+
+def get_utt2score(path):
+	with open(path, 'r') as file:
+		rows = file.readlines()
+
+	utt2score_dict = {}
+
+	for row in rows:
+		utt_score = row.strip('\n').split(' ')
+		utt2score_dict[utt_score[0]] = float(utt_score[1:])
+
+	return utt2score_dict
 
 def read_spk2utt(path):
 	with open(path, 'r') as file:
