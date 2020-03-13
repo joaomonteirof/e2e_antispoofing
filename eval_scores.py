@@ -1,12 +1,6 @@
 import argparse
 import numpy as np
-import glob
-import torch
-import torch.nn.functional as F
 import os
-from kaldi_io import read_mat_scp
-import model as model_
-import scipy.io as sio
 from sklearn import preprocessing
 from utils import compute_eer_labels, read_labels, get_utt2score
 
