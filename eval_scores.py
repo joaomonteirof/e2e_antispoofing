@@ -36,7 +36,7 @@ if __name__ == '__main__':
 		os.remove(args.out_path)
 		print(args.out_path + ' Removed')
 
-	test_utts, label_list = read_labels(args.trials_path, eval_=args.eval)
+	test_utts, label_list = read_labels(args.trials_path)
 	utt2score = get_utt2score(args.scores_path)
 	lb = preprocessing.LabelBinarizer()
 	y = torch.Tensor(lb.fit_transform(label_list)).squeeze(-1)
