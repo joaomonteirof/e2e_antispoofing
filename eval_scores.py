@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+import torch
 import os
 from sklearn import preprocessing
 from utils import compute_eer_labels, read_labels, get_utt2score
