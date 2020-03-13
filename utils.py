@@ -140,10 +140,21 @@ def get_utt2score(path):
 		rows = file.readlines()
 
 	utt2score_dict = {}
+	utt_list = []
+	score_list = []
 
 	for row in rows:
 		utt_score = row.strip('\n').split(' ')
-		utt2score_dict[utt_score[0]] = float(utt_score[1])
+		utt_list.append(utt_score[0])
+		score_list.append(float(utt_score[1]))
+
+	score_list = np.asarray(score_list)
+	max_score, min_score = np.max(score_list), np.min(score_list)
+	score_list = (score_list - min_score) / (max_score - min_score + 1e-8)
+
+	for i, utt in enumerate(utt_list):
+
+		utt2score_dict[utt] = score_list[i]
 
 	return utt2score_dict
 
