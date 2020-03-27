@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
+import math
 
 class SelfAttention(nn.Module):
 	def __init__(self, hidden_size):
@@ -1258,3 +1259,209 @@ class FTDNN(nn.Module):
 				if isinstance(layer, FTDNNLayer):
 					errors += layer.orth_error()
 		return errors
+
+def conv_bn(inp, oup, stride):
+	return nn.Sequential(
+		nn.Conv2d(inp, oup, 3, stride, 1, bias=False),
+		nn.BatchNorm2d(oup),
+		nn.ReLU6(inplace=True) )
+
+
+def conv_1x1_bn(inp, oup):
+	return nn.Sequential(
+		nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
+		nn.BatchNorm2d(oup),
+		nn.ReLU6(inplace=True) )
+
+class InvertedResidual(nn.Module):
+	def __init__(self, inp, oup, stride, expand_ratio):
+		super(InvertedResidual, self).__init__()
+		self.stride = stride
+		assert stride in [1, 2]
+
+		hidden_dim = round(inp * expand_ratio)
+		self.use_res_connect = self.stride == 1 and inp == oup
+
+		if expand_ratio == 1:
+			self.conv = nn.Sequential(
+				# dw
+				nn.Conv2d(hidden_dim, hidden_dim, 3, stride, 1, groups=hidden_dim, bias=False),
+				nn.BatchNorm2d(hidden_dim),
+				nn.ReLU6(inplace=True),
+				# pw-linear
+				nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
+				nn.BatchNorm2d(oup) )
+		else:
+			self.conv = nn.Sequential(
+				# pw
+				nn.Conv2d(inp, hidden_dim, 1, 1, 0, bias=False),
+				nn.BatchNorm2d(hidden_dim),
+				nn.ReLU6(inplace=True),
+				# dw
+				nn.Conv2d(hidden_dim, hidden_dim, 3, stride, 1, groups=hidden_dim, bias=False),
+				nn.BatchNorm2d(hidden_dim),
+				nn.ReLU6(inplace=True),
+				# pw-linear
+				nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
+				nn.BatchNorm2d(oup) )
+
+	def forward(self, x):
+		if self.use_res_connect:
+			return x + self.conv(x)
+		else:
+			return self.conv(x)
+
+class MobileNetV2(nn.Module):
+	def __init__(self, width_mult=1.):
+		super(MobileNetV2, self).__init__()
+		block = InvertedResidual
+		input_channel = 1
+		last_channel = 512
+		interverted_residual_setting = [
+			# t, c, n, s
+			[1, 16, 1, 1],
+			[6, 24, 2, 2],
+			[6, 32, 3, 2],
+			[6, 64, 4, 2],
+			[6, 96, 3, 1],
+			[6, 160, 3, 2],
+			[6, 320, 1, 1],
+		]
+
+		input_channel = int(input_channel * width_mult)
+		self.last_channel = int(last_channel * width_mult) if width_mult > 1.0 else last_channel
+		self.features = [conv_bn(1, input_channel, 2)]
+		# building inverted residual blocks
+		for t, c, n, s in interverted_residual_setting:
+			output_channel = int(c * width_mult)
+			for i in range(n):
+				if i == 0:
+					self.features.append(block(input_channel, output_channel, s, expand_ratio=t))
+				else:
+					self.features.append(block(input_channel, output_channel, 1, expand_ratio=t))
+				input_channel = output_channel
+		# building last several layers
+		self.features.append(conv_1x1_bn(input_channel, self.last_channel))
+		# out conv layer
+		self.features.append(nn.Conv2d(last_channel, 256, kernel_size=(9,3), stride=(1,1), padding=(0,1), bias=False))
+		self.features.append(nn.BatchNorm2d(256))
+		self.features.append(nn.ReLU())
+		# make it nn.Sequential
+		self.features = nn.Sequential(*self.features)
+
+		self.attention = SelfAttention(256)
+
+		self.out = nn.Linear(256*2, 1)
+
+		self._initialize_weights()
+
+	def forward(self, x):
+
+		x = self.features(x).squeeze(2)
+		stats = self.attention(x.permute(0,2,1).contiguous())
+		x = self.out(stats)
+
+		return x
+
+	def _initialize_weights(self):
+		for m in self.modules():
+			if isinstance(m, nn.Conv2d):
+				n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+				m.weight.data.normal_(0, math.sqrt(2. / n))
+				if m.bias is not None:
+					m.bias.data.zero_()
+			elif isinstance(m, nn.BatchNorm2d):
+				m.weight.data.fill_(1)
+				m.bias.data.zero_()
+			elif isinstance(m, nn.Linear):
+				n = m.weight.size(1)
+				m.weight.data.normal_(0, 0.01)
+				m.bias.data.zero_()
+
+class densenet_Bottleneck(nn.Module):
+	def __init__(self, in_planes, growth_rate):
+		super(densenet_Bottleneck, self).__init__()
+		self.bn1 = nn.BatchNorm2d(in_planes)
+		self.conv1 = nn.Conv2d(in_planes, 4*growth_rate, kernel_size=1, bias=False)
+		self.bn2 = nn.BatchNorm2d(4*growth_rate)
+		self.conv2 = nn.Conv2d(4*growth_rate, growth_rate, kernel_size=3, padding=1, bias=False)
+
+	def forward(self, x):
+		out = self.conv1(F.relu(self.bn1(x)))
+		out = self.conv2(F.relu(self.bn2(out)))
+		out = torch.cat([out,x], 1)
+		return out
+
+
+class Transition(nn.Module):
+	def __init__(self, in_planes, out_planes):
+		super(Transition, self).__init__()
+		self.bn = nn.BatchNorm2d(in_planes)
+		self.conv = nn.Conv2d(in_planes, out_planes, kernel_size=1, bias=False)
+
+	def forward(self, x):
+		out = self.conv(F.relu(self.bn(x)))
+		out = F.avg_pool2d(out, 2)
+		return out
+
+
+class DenseNet(nn.Module):
+	def __init__(self, block=densenet_Bottleneck, nblocks=[6,12,24,16], growth_rate=12, reduction=0.5):
+		super(DenseNet, self).__init__()
+
+		self.growth_rate = growth_rate
+
+		num_planes = 2*growth_rate
+		self.conv1 = nn.Conv2d(1, num_planes, kernel_size=3, padding=1, bias=False)
+
+		self.dense1 = self._make_dense_layers(block, num_planes, nblocks[0])
+		num_planes += nblocks[0]*growth_rate
+		out_planes = int(math.floor(num_planes*reduction))
+		self.trans1 = Transition(num_planes, out_planes)
+		num_planes = out_planes
+
+		self.dense2 = self._make_dense_layers(block, num_planes, nblocks[1])
+		num_planes += nblocks[1]*growth_rate
+		out_planes = int(math.floor(num_planes*reduction))
+		self.trans2 = Transition(num_planes, out_planes)
+		num_planes = out_planes
+
+		self.dense3 = self._make_dense_layers(block, num_planes, nblocks[2])
+		num_planes += nblocks[2]*growth_rate
+		out_planes = int(math.floor(num_planes*reduction))
+		self.trans3 = Transition(num_planes, out_planes)
+		num_planes = out_planes
+
+		self.dense4 = self._make_dense_layers(block, num_planes, nblocks[3])
+		num_planes += nblocks[3]*growth_rate
+
+		self.bn = nn.BatchNorm2d(num_planes)
+
+		self.conv_out = nn.Conv2d(num_planes, 256, kernel_size=(8,3), stride=(1,1), padding=(0,1), bias=False)
+		self.bn_out = nn.BatchNorm2d(256)
+
+		self.attention = SelfAttention(256)
+
+		self.out = nn.Linear(256*2, 1)
+
+	def _make_dense_layers(self, block, in_planes, nblock):
+		layers = []
+		for i in range(nblock):
+			layers.append(block(in_planes, self.growth_rate))
+			in_planes += self.growth_rate
+		return nn.Sequential(*layers)
+
+	def forward(self, x):
+		x = self.conv1(x)
+		x = self.trans1(self.dense1(x))
+		x = self.trans2(self.dense2(x))
+		x = self.trans3(self.dense3(x))
+		x = self.dense4(x)
+		x = F.avg_pool2d(F.relu(self.bn(x)), 4)
+		x = F.relu(self.bn_out(self.conv_out(x))).squeeze(2)
+		stats = self.attention(x.permute(0,2,1).contiguous())
+		x = self.out(stats)
+
+		return x
+
+		return out

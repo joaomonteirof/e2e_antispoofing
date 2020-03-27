@@ -13,9 +13,9 @@ from optimizer import TransformerOptimizer
 
 # Training settings
 parser = argparse.ArgumentParser(description='Speaker embbedings with contrastive loss')
-parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN'], default='lcnn_29_CC', help='Model arch')
-parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN'], default='lcnn_9_prodspec', help='Model arch')
-parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_9_prodspec', help='Model arch')
+parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_29_CC', help='Model arch')
 parser.add_argument('--resnet-type-la', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 parser.add_argument('--resnet-type-pa', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 parser.add_argument('--resnet-type-mix', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
@@ -108,6 +108,10 @@ elif args.model_la == 'FTDNN':
 	model_la = model_.FTDNN(ncoef=args.ncoef_la)
 elif args.model_la == 'Linear':
 	model_la = model_.Linear(ncoef=args.ncoef_la)
+elif args.model_la == 'mobilenet':
+	model_la = model_.MobileNetV2()
+elif args.model_la == 'densenet':
+	model_la = model_.DenseNet()
 
 if args.model_pa == 'lstm':
 	model_pa = model_.cnn_lstm()
@@ -139,6 +143,10 @@ elif args.model_pa == 'FTDNN':
 	model_pa = model_.FTDNN(ncoef=args.ncoef_pa)
 elif args.model_pa == 'Linear':
 	model_pa = model_.Linear(ncoef=args.ncoef_pa)
+elif args.model_pa == 'mobilenet':
+	model_pa = model_.MobileNetV2()
+elif args.model_pa == 'densenet':
+	model_pa = model_.DenseNet()
 
 if args.model_mix == 'lstm':
 	model_mix = model_.cnn_lstm()
@@ -170,6 +178,10 @@ elif args.model_mix == 'FTDNN':
 	model_mix = model_.FTDNN(ncoef=args.ncoef_mix)
 elif args.model_mix == 'Linear':
 	model_mix = model_.Linear(ncoef=args.ncoef_mix)
+elif args.model_mix == 'mobilenet':
+	model_mix = model_.MobileNetV2()
+elif args.model_mix == 'densenet':
+	model_mix = model_.DenseNet()
 
 if args.pretrained_la_path is not None:
 	ckpt = torch.load(args.pretrained_la_path, map_location = lambda storage, loc: storage)
