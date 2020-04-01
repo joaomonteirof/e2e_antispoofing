@@ -10,7 +10,7 @@ from data_load import Loader
 
 # Training settings
 parser = argparse.ArgumentParser(description='Test new architectures')
-parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'FTDNN', 'Linear', 'mobilenet', 'densenet', 'all'], default='resnet', help='Model arch')
+parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'FTDNN', 'Linear', 'mobilenet', 'densenet', 'all'], default='resnet', help='Model arch')
 parser.add_argument('--resnet-type', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 args = parser.parse_args()
 
@@ -29,6 +29,11 @@ if args.model == 'resnet_pca' or args.model == 'all':
 	model = model_.ResNet_pca(resnet_type=args.resnet_type)
 	mu = model.forward(batch)
 	print('resnet_pca', mu.size())
+if args.model == 'wideresnet' or args.model == 'all':
+	batch = torch.rand(3, 1, 120, 300)
+	model = model_.WideResNet()
+	mu = model.forward(batch)
+	print('wideresnet', mu.size())
 if args.model == 'lcnn_9' or args.model == 'all':
 	batch = torch.rand(3, 1, 257, 300)
 	model = model_.lcnn_9layers()
@@ -91,7 +96,7 @@ if args.model == 'Linear' or args.model == 'all':
 	print('Linear', mu.size())
 if args.model == 'mobilenet' or args.model == 'all':
 	batch = torch.rand(3, 1, 257, 300)
-	model = model_.MobileNetV2()
+	model = model_.MobileNetV3_Small()
 	mu = model.forward(batch)
 	print('MobileNet', mu.size())
 if args.model == 'densenet' or args.model == 'all':

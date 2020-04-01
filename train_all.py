@@ -13,9 +13,9 @@ from optimizer import TransformerOptimizer
 
 # Training settings
 parser = argparse.ArgumentParser(description='Speaker embbedings with contrastive loss')
-parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_29_CC', help='Model arch')
-parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_9_prodspec', help='Model arch')
-parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_9_prodspec', help='Model arch')
+parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_29_CC', help='Model arch')
 parser.add_argument('--resnet-type-la', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 parser.add_argument('--resnet-type-pa', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 parser.add_argument('--resnet-type-mix', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
@@ -84,6 +84,8 @@ elif args.model_la == 'resnet':
 	model_la = model_.ResNet(resnet_type=args.resnet_type_la)
 elif args.model_la == 'resnet_pca':
 	model_la = model_.ResNet_pca(resnet_type=args.resnet_type_la)
+elif args.model_la == 'wideresnet':
+	model_la = model_.WideResNet()
 elif args.model_la == 'lcnn_9':
 	model_la = model_.lcnn_9layers()
 elif args.model_la == 'lcnn_29':
@@ -119,6 +121,8 @@ elif args.model_pa == 'resnet':
 	model_pa = model_.ResNet(resnet_type=args.resnet_type_pa)
 elif args.model_pa == 'resnet_pca':
 	model_pa = model_.ResNet_pca(resnet_type=args.resnet_type_pa)
+elif args.model_pa == 'wideresnet':
+	model_pa = model_.WideResNet()
 elif args.model_pa == 'lcnn_9':
 	model_pa = model_.lcnn_9layers()
 elif args.model_pa == 'lcnn_29':
@@ -144,7 +148,7 @@ elif args.model_pa == 'FTDNN':
 elif args.model_pa == 'Linear':
 	model_pa = model_.Linear(ncoef=args.ncoef_pa)
 elif args.model_pa == 'mobilenet':
-	model_pa = model_.MobileNetV2()
+	model_pa = model_.MobileNetV3_Small()
 elif args.model_pa == 'densenet':
 	model_pa = model_.DenseNet()
 
@@ -154,6 +158,8 @@ elif args.model_mix == 'resnet':
 	model_mix = model_.ResNet(resnet_type=args.resnet_type_mix)
 elif args.model_mix == 'resnet_pca':
 	model_mix = model_.ResNet_pca(resnet_type=args.resnet_type_mix)
+elif args.model_mix == 'wideresnet':
+	model_mix = model_.WideResNet()
 elif args.model_mix == 'lcnn_9':
 	model_mix = model_.lcnn_9layers()
 elif args.model_mix == 'lcnn_29':
@@ -179,7 +185,7 @@ elif args.model_mix == 'FTDNN':
 elif args.model_mix == 'Linear':
 	model_mix = model_.Linear(ncoef=args.ncoef_mix)
 elif args.model_mix == 'mobilenet':
-	model_mix = model_.MobileNetV2()
+	model_mix = model_.MobileNetV3_Small()
 elif args.model_mix == 'densenet':
 	model_mix = model_.DenseNet()
 

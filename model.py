@@ -479,6 +479,100 @@ class ResNet_CC(nn.Module):
 
 		return out
 
+class BasicBlock(nn.Module):
+	def __init__(self, inplane, outplane, stride, dropRate=0.0):
+		super(BasicBlock, self).__init__()
+		self.bn1 = nn.BatchNorm2d(inplane)
+		self.relu1 = nn.ReLU(inplace=True)
+		self.conv1 = nn.Conv2d(inplane, outplane, kernel_size=3, stride=stride,
+							   padding=1, bias=False)
+		self.bn2 = nn.BatchNorm2d(outplane)
+		self.relu2 = nn.ReLU(inplace=True)
+		self.conv2 = nn.Conv2d(outplane, outplane, kernel_size=3, stride=1,
+							   padding=1, bias=False)
+		self.droprate = dropRate
+		self.equalInOut = (inplane == outplane)
+		self.convShortcut = (not self.equalInOut) and nn.Conv2d(inplane, outplane, kernel_size=1, stride=stride,
+							   padding=0, bias=False) or None
+	
+	def forward(self, x):
+		if not self.equalInOut:
+			x = self.relu1(self.bn1(x))
+		else:
+			out = self.relu1(self.bn1(x))
+		out = self.relu2(self.bn2(self.conv1(out if self.equalInOut else x)))
+		if self.droprate > 0:
+			out = F.dropout(out, p=self.droprate, training=self.training)
+		out = self.conv2(out)
+		return torch.add(x if self.equalInOut else self.convShortcut(x), out)
+
+
+class NetworkBlock(nn.Module):
+	def __init__(self, nb_layers, in_planes, out_planes, block, stride, dropRate=0.0):
+		super(NetworkBlock, self).__init__()
+		self.layer = self._make_layer(block, in_planes, out_planes, nb_layers, stride, dropRate)
+	
+	def _make_layer(self, block, in_planes, out_planes, nb_layers, stride, dropRate):
+		layers = []
+		for i in range(int(nb_layers)):
+			layers.append(block(i==0 and in_planes or out_planes, out_planes, i==0 and stride or 1, dropRate))
+		return nn.Sequential(*layers)
+	
+	def forward(self, x):
+		return self.layer(x)
+
+class WideResNet(nn.Module):
+	def __init__(self, depth=28, widen_factor=10, dropRate=0.0):
+		super(WideResNet, self).__init__()
+		nChannels = [16, 16*widen_factor, 32*widen_factor, 64*widen_factor]
+	   
+		n = (depth - 4) / 6
+		block = BasicBlock
+
+		# 1st conv before any network block
+		self.conv1 = nn.Conv2d(1, nChannels[0], kernel_size=3, stride=1, padding=1, bias=False)
+
+		# 1st block
+		self.block1 = NetworkBlock(n, nChannels[0], nChannels[1], block, 1, dropRate)
+		# 2nd block
+		self.block2 = NetworkBlock(n, nChannels[1], nChannels[2], block, 2, dropRate)
+		# 3rd block
+		self.block3 = NetworkBlock(n, nChannels[2], nChannels[3], block, 2, dropRate)
+		#global average pooling 
+		self.relu = nn.ReLU(inplace=True)
+		self.bn1 = nn.BatchNorm2d(nChannels[3])
+
+		self.conv_out = nn.Conv2d(nChannels[3], 256, kernel_size=(7,3), stride=(1,1), padding=(0,1), bias=False)
+		self.bn_out = nn.BatchNorm2d(256)
+
+		self.attention = SelfAttention(256)
+
+		self.out = nn.Linear(256*2, 1)
+
+		# normal weight init
+		for m in self.modules():
+			if isinstance(m, nn.Conv2d):
+				n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+				m.weight.data.normal_(0, math.sqrt(2. / n))
+			elif isinstance(m, nn.BatchNorm2d):
+				m.weight.data.fill_(1)
+				m.bias.data.zero_()
+			elif isinstance(m, nn.Linear):
+				m.bias.data.zero_()
+
+	def forward(self, x):
+		x = self.conv1(x)
+		x = self.block1(x)
+		x = self.block2(x)
+		x = self.block3(x)
+		x = self.relu(self.bn1(x))
+		x = F.avg_pool2d(x, 4)
+		x = F.relu(self.bn_out(self.conv_out(x))).squeeze(2)
+		stats = self.attention(x.permute(0,2,1).contiguous())
+		x = self.out(stats)
+
+		return x
+
 class mfm(nn.Module):
 	def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, type=1):
 		super(mfm, self).__init__()
@@ -1260,123 +1354,128 @@ class FTDNN(nn.Module):
 					errors += layer.orth_error()
 		return errors
 
-def conv_bn(inp, oup, stride):
-	return nn.Sequential(
-		nn.Conv2d(inp, oup, 3, stride, 1, bias=False),
-		nn.BatchNorm2d(oup),
-		nn.ReLU6(inplace=True) )
 
 
-def conv_1x1_bn(inp, oup):
-	return nn.Sequential(
-		nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
-		nn.BatchNorm2d(oup),
-		nn.ReLU6(inplace=True) )
+class hswish(nn.Module):
+	def forward(self, x):
+		out = x * F.relu6(x + 3, inplace=True) / 6
+		return out
 
-class InvertedResidual(nn.Module):
-	def __init__(self, inp, oup, stride, expand_ratio):
-		super(InvertedResidual, self).__init__()
-		self.stride = stride
-		assert stride in [1, 2]
 
-		hidden_dim = round(inp * expand_ratio)
-		self.use_res_connect = self.stride == 1 and inp == oup
+class hsigmoid(nn.Module):
+	def forward(self, x):
+		out = F.relu6(x + 3, inplace=True) / 6
+		return out
 
-		if expand_ratio == 1:
-			self.conv = nn.Sequential(
-				# dw
-				nn.Conv2d(hidden_dim, hidden_dim, 3, stride, 1, groups=hidden_dim, bias=False),
-				nn.BatchNorm2d(hidden_dim),
-				nn.ReLU6(inplace=True),
-				# pw-linear
-				nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
-				nn.BatchNorm2d(oup) )
-		else:
-			self.conv = nn.Sequential(
-				# pw
-				nn.Conv2d(inp, hidden_dim, 1, 1, 0, bias=False),
-				nn.BatchNorm2d(hidden_dim),
-				nn.ReLU6(inplace=True),
-				# dw
-				nn.Conv2d(hidden_dim, hidden_dim, 3, stride, 1, groups=hidden_dim, bias=False),
-				nn.BatchNorm2d(hidden_dim),
-				nn.ReLU6(inplace=True),
-				# pw-linear
-				nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
-				nn.BatchNorm2d(oup) )
+
+class SeModule(nn.Module):
+	def __init__(self, in_size, reduction=4):
+		super(SeModule, self).__init__()
+		self.se = nn.Sequential(
+			nn.AdaptiveAvgPool2d(1),
+			nn.Conv2d(in_size, in_size // reduction, kernel_size=1, stride=1, padding=0, bias=False),
+			nn.BatchNorm2d(in_size // reduction),
+			nn.ReLU(inplace=True),
+			nn.Conv2d(in_size // reduction, in_size, kernel_size=1, stride=1, padding=0, bias=False),
+			nn.BatchNorm2d(in_size),
+			hsigmoid()
+		)
 
 	def forward(self, x):
-		if self.use_res_connect:
-			return x + self.conv(x)
-		else:
-			return self.conv(x)
+		return x * self.se(x)
 
-class MobileNetV2(nn.Module):
-	def __init__(self, width_mult=1.):
-		super(MobileNetV2, self).__init__()
-		block = InvertedResidual
-		input_channel = 1
-		last_channel = 512
-		interverted_residual_setting = [
-			# t, c, n, s
-			[1, 16, 1, 1],
-			[6, 24, 2, 2],
-			[6, 32, 3, 2],
-			[6, 64, 4, 2],
-			[6, 96, 3, 1],
-			[6, 160, 3, 2],
-			[6, 320, 1, 1],
-		]
 
-		input_channel = int(input_channel * width_mult)
-		self.last_channel = int(last_channel * width_mult) if width_mult > 1.0 else last_channel
-		self.features = [conv_bn(1, input_channel, 2)]
-		# building inverted residual blocks
-		for t, c, n, s in interverted_residual_setting:
-			output_channel = int(c * width_mult)
-			for i in range(n):
-				if i == 0:
-					self.features.append(block(input_channel, output_channel, s, expand_ratio=t))
-				else:
-					self.features.append(block(input_channel, output_channel, 1, expand_ratio=t))
-				input_channel = output_channel
-		# building last several layers
-		self.features.append(conv_1x1_bn(input_channel, self.last_channel))
-		# out conv layer
-		self.features.append(nn.Conv2d(last_channel, 256, kernel_size=(9,3), stride=(1,1), padding=(0,1), bias=False))
-		self.features.append(nn.BatchNorm2d(256))
-		self.features.append(nn.ReLU())
-		# make it nn.Sequential
-		self.features = nn.Sequential(*self.features)
+class Block(nn.Module):
+	'''expand + depthwise + pointwise'''
+	def __init__(self, kernel_size, in_size, expand_size, out_size, nolinear, semodule, stride):
+		super(Block, self).__init__()
+		self.stride = stride
+		self.se = semodule
+
+		self.conv1 = nn.Conv2d(in_size, expand_size, kernel_size=1, stride=1, padding=0, bias=False)
+		self.bn1 = nn.BatchNorm2d(expand_size)
+		self.nolinear1 = nolinear
+		self.conv2 = nn.Conv2d(expand_size, expand_size, kernel_size=kernel_size, stride=stride, padding=kernel_size//2, groups=expand_size, bias=False)
+		self.bn2 = nn.BatchNorm2d(expand_size)
+		self.nolinear2 = nolinear
+		self.conv3 = nn.Conv2d(expand_size, out_size, kernel_size=1, stride=1, padding=0, bias=False)
+		self.bn3 = nn.BatchNorm2d(out_size)
+
+		self.shortcut = nn.Sequential()
+		if stride == 1 and in_size != out_size:
+			self.shortcut = nn.Sequential(
+				nn.Conv2d(in_size, out_size, kernel_size=1, stride=1, padding=0, bias=False),
+				nn.BatchNorm2d(out_size),
+			)
+
+	def forward(self, x):
+		out = self.nolinear1(self.bn1(self.conv1(x)))
+		out = self.nolinear2(self.bn2(self.conv2(out)))
+		out = self.bn3(self.conv3(out))
+		if self.se != None:
+			out = self.se(out)
+		out = out + self.shortcut(x) if self.stride==1 else out
+		return out
+
+class MobileNetV3_Small(nn.Module):
+	def __init__(self):
+		super(MobileNetV3_Small, self).__init__()
+		self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=2, padding=1, bias=False)
+		self.bn1 = nn.BatchNorm2d(16)
+		self.hs1 = hswish()
+
+		self.bneck = nn.Sequential(
+			Block(3, 16, 16, 16, nn.ReLU(inplace=True), SeModule(16), 2),
+			Block(3, 16, 72, 24, nn.ReLU(inplace=True), None, 2),
+			Block(3, 24, 88, 24, nn.ReLU(inplace=True), None, 1),
+			Block(5, 24, 96, 40, hswish(), SeModule(40), 2),
+			Block(5, 40, 240, 40, hswish(), SeModule(40), 1),
+			Block(5, 40, 240, 40, hswish(), SeModule(40), 1),
+			Block(5, 40, 120, 48, hswish(), SeModule(48), 1),
+			Block(5, 48, 144, 48, hswish(), SeModule(48), 1),
+			Block(5, 48, 288, 96, hswish(), SeModule(96), 2),
+			Block(5, 96, 576, 96, hswish(), SeModule(96), 1),
+			Block(5, 96, 576, 96, hswish(), SeModule(96), 1),
+		)
+
+
+		self.conv2 = nn.Conv2d(96, 576, kernel_size=1, stride=1, padding=0, bias=False)
+		self.bn2 = nn.BatchNorm2d(576)
+		self.hs2 = hswish()
+
+		self.conv_out = nn.Conv2d(576, 256, kernel_size=(9,3), stride=(1,1), padding=(0,1), bias=False)
+		self.bn_out = nn.BatchNorm2d(256)
 
 		self.attention = SelfAttention(256)
 
 		self.out = nn.Linear(256*2, 1)
 
-		self._initialize_weights()
+		self.init_params()
+
+	def init_params(self):
+		for m in self.modules():
+			if isinstance(m, nn.Conv2d):
+				init.kaiming_normal_(m.weight, mode='fan_out')
+				if m.bias is not None:
+					init.constant_(m.bias, 0)
+			elif isinstance(m, nn.BatchNorm2d):
+				init.constant_(m.weight, 1)
+				init.constant_(m.bias, 0)
+			elif isinstance(m, nn.Linear):
+				init.normal_(m.weight, std=0.001)
+				if m.bias is not None:
+					init.constant_(m.bias, 0)
 
 	def forward(self, x):
+		x = self.hs1(self.bn1(self.conv1(x)))
+		x = self.bneck(x)
+		x = self.hs2(self.bn2(self.conv2(x)))
 
-		x = self.features(x).squeeze(2)
+		x = F.relu(self.bn_out(self.conv_out(x))).squeeze(2)
 		stats = self.attention(x.permute(0,2,1).contiguous())
 		x = self.out(stats)
 
 		return x
-
-	def _initialize_weights(self):
-		for m in self.modules():
-			if isinstance(m, nn.Conv2d):
-				n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-				m.weight.data.normal_(0, math.sqrt(2. / n))
-				if m.bias is not None:
-					m.bias.data.zero_()
-			elif isinstance(m, nn.BatchNorm2d):
-				m.weight.data.fill_(1)
-				m.bias.data.zero_()
-			elif isinstance(m, nn.Linear):
-				n = m.weight.size(1)
-				m.weight.data.normal_(0, 0.01)
-				m.bias.data.zero_()
 
 class densenet_Bottleneck(nn.Module):
 	def __init__(self, in_planes, growth_rate):
@@ -1463,5 +1562,3 @@ class DenseNet(nn.Module):
 		x = self.out(stats)
 
 		return x
-
-		return out
