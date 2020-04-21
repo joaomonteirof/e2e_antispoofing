@@ -33,9 +33,9 @@ if __name__ == '__main__':
 	parser.add_argument('--cp1-path', type=str, default=None, metavar='Path', help='Path for file containing first model')
 	parser.add_argument('--cp2-path', type=str, default=None, metavar='Path', help='Path for file containing second model')
 	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
-	parser.add_argument('--model1', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_9', help='Model arch')
+	parser.add_argument('--model1', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_9', help='Model arch')
 	parser.add_argument('--resnet1-type', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
-	parser.add_argument('--model2', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_9', help='Model arch')
+	parser.add_argument('--model2', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_9', help='Model arch')
 	parser.add_argument('--resnet2-type', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	parser.add_argument('--prefix', type=str, default='./scores', metavar='Path', help='prefix for score files names')
@@ -88,6 +88,8 @@ if __name__ == '__main__':
 		model1 = model_.ResNet_CC(ncoef=args.ncoef1, init_coef=args.init_coef1, resnet_type=args.resnet1_type)
 	elif args.model1 == 'TDNN':
 		model1 = model_.TDNN(ncoef=args.ncoef1, init_coef=args.init_coef1)
+	elif args.model1 == 'TDNN_LSTM':
+		model1 = model_.TDNN_LSTM(ncoef=args.ncoef1)
 	elif args.model1 == 'FTDNN':
 		model1 = model_.FTDNN(ncoef=args.ncoef1, init_coef=args.init_coef1)
 	elif args.model1 == 'mobilenet':
@@ -123,6 +125,8 @@ if __name__ == '__main__':
 		model2 = model_.ResNet_CC(ncoef=args.ncoef2, init_coef=args.init_coef2, resnet_type=args.resnet2_type)
 	elif args.model2 == 'TDNN':
 		model2 = model_.TDNN(ncoef=args.ncoef2, init_coef=args.init_coef2)
+	elif args.model2 == 'TDNN_LSTM':
+		model2 = model_.TDNN_LSTM(ncoef=args.ncoef2)
 	elif args.model2 == 'FTDNN':
 		model2 = model_.FTDNN(ncoef=args.ncoef2, init_coef=args.init_coef2)
 	elif args.model2 == 'mobilenet':

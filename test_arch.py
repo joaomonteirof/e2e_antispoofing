@@ -10,7 +10,7 @@ from data_load import Loader
 
 # Training settings
 parser = argparse.ArgumentParser(description='Test new architectures')
-parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'FTDNN', 'Linear', 'mobilenet', 'densenet', 'all'], default='resnet', help='Model arch')
+parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'Linear', 'mobilenet', 'densenet', 'all'], default='resnet', help='Model arch')
 parser.add_argument('--resnet-type', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 args = parser.parse_args()
 
@@ -84,6 +84,11 @@ if args.model == 'TDNN' or args.model == 'all':
 	model = model_.TDNN()
 	mu = model.forward(batch)
 	print('TDNN', mu.size())
+if args.model == 'TDNN_LSTM' or args.model == 'all':
+	batch = torch.rand(3, 1, 90, 300)
+	model = model_.TDNN_LSTM()
+	mu = model.forward(batch)
+	print('TDNN_LSTM', mu.size())
 if args.model == 'FTDNN' or args.model == 'all':
 	batch = torch.rand(3, 1, 90, 300)
 	model = model_.FTDNN()

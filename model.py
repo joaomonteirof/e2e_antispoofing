@@ -1009,6 +1009,66 @@ class TDNN(nn.Module):
 
 		return out
 
+class TDNN_LSTM(nn.Module):
+	def __init__(self, nclasses=-1, ncoef=90, init_coef=0):
+		super(TDNN_LSTM, self).__init__()
+
+		self.ncoef=ncoef
+		self.init_coef=init_coef
+
+		self.model_1 = nn.Sequential( nn.Conv1d(ncoef, 512, 5, padding=2),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True) )
+
+		self.lstm = nn.LSTM(input_size=512, hidden_size=512, num_layers=1, bidirectional=False, batch_first=False)
+
+		self.model_2 = nn.Sequential( 
+			nn.Conv1d(512, 512, 3, dilation=2, padding=2),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Conv1d(512, 512, 3, dilation=3, padding=3),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Conv1d(512, 512, 1),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Conv1d(512, 1500, 1),
+			nn.BatchNorm1d(1500),
+			nn.ReLU(inplace=True) )
+
+		self.pooling = StatisticalPooling()
+
+		self.post_pooling = nn.Sequential(nn.Linear(3000, 512),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Linear(512, 512),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Linear(512, nclasses) if nclasses>2 else nn.Linear(512, 1) )
+
+	def forward(self, x):
+
+		x = x[:,:,self.init_coef:,:].squeeze(1)
+
+		batch_size = x.size(0)
+
+		h0 = torch.zeros(1, batch_size, 512).to(x.device)
+		c0 = torch.zeros(1, batch_size, 512).to(x.device)
+
+		x = self.model_1(x)
+
+		x = x.permute(2,0,1)
+		x, h_c = self.lstm(x, (h0, c0))
+		x = x.permute(1,2,0)
+
+		x = self.model_2(x)
+
+		x = self.pooling(x)
+
+		out = self.post_pooling(x)
+
+		return out
+
 class Linear(nn.Module):
 	def __init__(self, nclasses=-1, ncoef=90, init_coef=0):
 		super(Linear, self).__init__()
