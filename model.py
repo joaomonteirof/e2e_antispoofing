@@ -1058,8 +1058,8 @@ class TDNN_LSTM(nn.Module):
 		x = self.model_1(x)
 
 		x = x.permute(2,0,1)
-		x, h_c = self.lstm(x, (h0, c0))
-		x = x.permute(1,2,0)
+		x_rec, h_c = self.lstm(x, (h0, c0))
+		x = (x_rec+x).permute(1,2,0)
 
 		x = self.model_2(x)
 
