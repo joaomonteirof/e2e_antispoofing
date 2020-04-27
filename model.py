@@ -1622,3 +1622,47 @@ class DenseNet(nn.Module):
 		x = self.out(stats)
 
 		return x
+
+cfg = {
+	'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+	'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+	'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
+	'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
+}
+
+
+class VGG(nn.Module):
+	def __init__(self, vgg_name):
+		super(VGG, self).__init__()
+
+		self.features = self._make_layers(cfg[vgg_name])
+		self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
+
+		self.conv_out = nn.Conv2d(512, 256, kernel_size=(7,3), stride=(1,1), padding=(0,1), bias=False)
+		self.bn_out = nn.BatchNorm2d(256)
+
+		self.attention = SelfAttention(256)
+
+		self.out = nn.Linear(256*2, 1)
+
+	def forward(self, x):
+		x = self.avgpool(self.features(x))
+		x = F.relu(self.bn_out(self.conv_out(x))).squeeze(2)
+		stats = self.attention(x.permute(0,2,1).contiguous())
+		x = self.out(stats)
+
+		return x
+
+	def _make_layers(self, cfg):
+		layers = []
+		in_channels = 1
+		for x in cfg:
+			if x == 'M':
+				layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+			else:
+				layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+						   nn.BatchNorm2d(x),
+						   nn.ReLU(inplace=True)]
+				in_channels = x
+		layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+		return nn.Sequential(*layers)

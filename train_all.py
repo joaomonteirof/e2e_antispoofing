@@ -13,12 +13,15 @@ from optimizer import TransformerOptimizer
 
 # Training settings
 parser = argparse.ArgumentParser(description='Speaker embbedings with contrastive loss')
-parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_29_CC', help='Model arch')
-parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_9_prodspec', help='Model arch')
-parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_9_prodspec', help='Model arch')
+parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_29_CC', help='Model arch')
 parser.add_argument('--resnet-type-la', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 parser.add_argument('--resnet-type-pa', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 parser.add_argument('--resnet-type-mix', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
+parser.add_argument('--vgg-type-la', choices=['VGG11', 'VGG13', 'VGG16', 'VGG19'], default='VGG16', help='VGG arch')
+parser.add_argument('--vgg-type-pa', choices=['VGG11', 'VGG13', 'VGG16', 'VGG19'], default='VGG16', help='VGG arch')
+parser.add_argument('--vgg-type-mix', choices=['VGG11', 'VGG13', 'VGG16', 'VGG19'], default='VGG16', help='VGG arch')
 parser.add_argument('--train-mode', choices=['mix', 'lapa', 'independent'], default='mix', help='Train mode')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--valid-batch-size', type=int, default=64, metavar='N', help='input batch size for validation (default: 64)')
@@ -80,6 +83,8 @@ valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.valid_
 
 if args.model_la == 'lstm':
 	model_la = model_.cnn_lstm()
+elif args.model_la == 'VGG':
+	model_la = model_.VGG(vgg_name=args.vgg_type_la)
 elif args.model_la == 'resnet':
 	model_la = model_.ResNet(resnet_type=args.resnet_type_la)
 elif args.model_la == 'resnet_pca':
@@ -119,6 +124,8 @@ elif args.model_la == 'densenet':
 
 if args.model_pa == 'lstm':
 	model_pa = model_.cnn_lstm()
+elif args.model_pa == 'VGG':
+	model_pa = model_.VGG(vgg_name=args.vgg_type_pa)
 elif args.model_pa == 'resnet':
 	model_pa = model_.ResNet(resnet_type=args.resnet_type_pa)
 elif args.model_pa == 'resnet_pca':
@@ -158,6 +165,8 @@ elif args.model_pa == 'densenet':
 
 if args.model_mix == 'lstm':
 	model_mix = model_.cnn_lstm()
+elif args.model_mix == 'VGG':
+	model_mix = model_.VGG(vgg_name=args.vgg_type_mix)
 elif args.model_mix == 'resnet':
 	model_mix = model_.ResNet(resnet_type=args.resnet_type_mix)
 elif args.model_mix == 'resnet_pca':

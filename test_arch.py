@@ -10,8 +10,9 @@ from data_load import Loader
 
 # Training settings
 parser = argparse.ArgumentParser(description='Test new architectures')
-parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'Linear', 'mobilenet', 'densenet', 'all'], default='resnet', help='Model arch')
+parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'Linear', 'mobilenet', 'densenet', 'VGG', 'all'], default='resnet', help='Model arch')
 parser.add_argument('--resnet-type', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
+parser.add_argument('--vgg-type', choices=['VGG11', 'VGG13', 'VGG16', 'VGG19'], default='VGG16', help='VGG arch')
 args = parser.parse_args()
 
 if args.model == 'lstm' or args.model == 'all':
@@ -19,6 +20,11 @@ if args.model == 'lstm' or args.model == 'all':
 	model = model_.cnn_lstm()
 	mu = model.forward(batch)
 	print('lstm', mu.size())
+if args.model == 'VGG' or args.model == 'all':
+	batch = torch.rand(3, 1, 257, 300)
+	model = model_.VGG(vgg_name=args.vgg_type)
+	mu = model.forward(batch)
+	print('resnet', mu.size())
 if args.model == 'resnet' or args.model == 'all':
 	batch = torch.rand(3, 1, 257, 300)
 	model = model_.ResNet(resnet_type=args.resnet_type)

@@ -12,8 +12,9 @@ from utils import *
 
 # Training settings
 parser = argparse.ArgumentParser(description='Speaker embbedings with contrastive loss')
-parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet'], default='lcnn_9', help='Model arch')
+parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_9', help='Model arch')
 parser.add_argument('--resnet-type', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
+parser.add_argument('--vgg-type', choices=['VGG11', 'VGG13', 'VGG16', 'VGG19'], default='VGG16', help='VGG arch')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--valid-batch-size', type=int, default=64, metavar='N', help='input batch size for validation (default: 64)')
 parser.add_argument('--epochs', type=int, default=500, metavar='N', help='number of epochs to train (default: 500)')
@@ -69,6 +70,8 @@ if args.model == 'lstm':
 	model = model_.cnn_lstm()
 elif args.model == 'resnet':
 	model = model_.ResNet(resnet_type=args.resnet_type)
+elif args.model == 'VGG':
+	model = model_.VGG(vgg_name=args.vgg_type)
 elif args.model == 'resnet_pca':
 	model = model_.ResNet_pca(resnet_type=args.resnet_type)
 elif args.model == 'wideresnet':
