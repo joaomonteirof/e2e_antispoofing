@@ -5,12 +5,14 @@ import torch.nn.init as init
 import math
 
 class SelfAttention(nn.Module):
-	def __init__(self, hidden_size):
+	def __init__(self, hidden_size, mean_only=False):
 		super(SelfAttention, self).__init__()
 
 		#self.output_size = output_size
 		self.hidden_size = hidden_size
 		self.att_weights = nn.Parameter(torch.Tensor(1, hidden_size),requires_grad=True)
+
+		self.mean_only = mean_only
 
 		init.kaiming_uniform_(self.att_weights)
 
@@ -26,16 +28,19 @@ class SelfAttention(nn.Module):
 			attentions = F.softmax(torch.tanh(weights.squeeze()),dim=1)
 			weighted = torch.mul(inputs, attentions.unsqueeze(2).expand_as(inputs))
 
-		noise = 1e-5*torch.randn(weighted.size())
+		if self.mean_only:
+			return weighted.sum(1)
+		else:
+			noise = 1e-5*torch.randn(weighted.size())
 
-		if inputs.is_cuda:
-			noise = noise.to(inputs.device)
+			if inputs.is_cuda:
+				noise = noise.to(inputs.device)
 
-		avg_repr, std_repr = weighted.sum(1), (weighted+noise).std(1)
+			avg_repr, std_repr = weighted.sum(1), (weighted+noise).std(1)
 
-		representations = torch.cat((avg_repr,std_repr),1)
+			representations = torch.cat((avg_repr,std_repr),1)
 
-		return representations
+			return representations
 
 class PreActBlock(nn.Module):
 	'''Pre-activation version of the BasicBlock.'''
@@ -1006,6 +1011,76 @@ class TDNN(nn.Module):
 		x = self.model(x)
 		x = self.pooling(x)
 		out = self.post_pooling(x)
+
+		return out
+
+class TDNN_multipool(nn.Module):
+
+	def __init__(self, nclasses=-1, ncoef=90, init_coef=0):
+		super().__init__()
+
+		self.ncoef=ncoef
+		self.init_coef=init_coef
+
+		self.model_1 = nn.Sequential( nn.Conv1d(ncoef, 512, 5, padding=2),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True) )
+		self.model_2 = nn.Sequential( nn.Conv1d(512, 512, 5, padding=2),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True) )
+		self.model_3 = nn.Sequential( nn.Conv1d(512, 512, 5, padding=3),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True) )
+		self.model_4 = nn.Sequential( nn.Conv1d(512, 512, 7),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True) )
+		self.model_5 = nn.Sequential( nn.Conv1d(512, 512, 1),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True) )
+
+		self.att_pooling = SelfAttention(1024, mean_only=True)
+
+		self.stats_pooling = StatisticalPooling()
+
+		self.post_pooling_1 = nn.Sequential(nn.Linear(1024, 512),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True) )
+
+		self.post_pooling_2 = nn.Sequential(nn.Linear(512, 512),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Linear(512, 512),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Linear(512, nclasses) if nclasses>2 else nn.Linear(512, 1) )
+
+	def forward(self, x):
+
+		x_pool = []
+
+		x = x.squeeze(1)
+
+		x_1 = self.model_1(x)
+		x_pool.append(self.stats_pooling(x_1).unsqueeze(2))
+
+		x_2 = self.model_2(x_1)
+		x_pool.append(self.stats_pooling(x_2).unsqueeze(2))
+
+		x_3 = self.model_3(x_2)
+		x_pool.append(self.stats_pooling(x_3).unsqueeze(2))
+
+		x_4 = self.model_4(x_3)
+		x_pool.append(self.stats_pooling(x_4).unsqueeze(2))
+
+		x_5 = self.model_5(x_4)
+		x_pool.append(self.stats_pooling(x_5).unsqueeze(2))
+
+		x_pool = torch.cat(x_pool, -1).transpose(1,-1)
+
+		x = self.att_pooling(x_pool)
+
+		x = self.post_pooling_1(x)
+		out = self.post_pooling_2(x)
 
 		return out
 

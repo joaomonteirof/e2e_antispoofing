@@ -13,9 +13,9 @@ from optimizer import TransformerOptimizer
 
 # Training settings
 parser = argparse.ArgumentParser(description='Speaker embbedings with contrastive loss')
-parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_29_CC', help='Model arch')
-parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_9_prodspec', help='Model arch')
-parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--model-la', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_multipool', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_29_CC', help='Model arch')
+parser.add_argument('--model-pa', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_multipool', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_9_prodspec', help='Model arch')
+parser.add_argument('--model-mix', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'Linear', 'TDNN', 'TDNN_multipool', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_29_CC', help='Model arch')
 parser.add_argument('--resnet-type-la', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 parser.add_argument('--resnet-type-pa', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 parser.add_argument('--resnet-type-mix', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
@@ -111,6 +111,8 @@ elif args.model_la == 'resnet_CC':
 	model_la = model_.ResNet_CC(ncoef=args.ncoef_la, resnet_type=args.resnet_type_la)
 elif args.model_la == 'TDNN':
 	model_la = model_.TDNN(ncoef=args.ncoef_la)
+elif args.model_la == 'TDNN_multipool':
+	model_la = model_.TDNN_multipool(ncoef=args.ncoef_la)
 elif args.model_la == 'TDNN_LSTM':
 	model_la = model_.TDNN_LSTM(ncoef=args.ncoef_la)
 elif args.model_la == 'FTDNN':
@@ -152,6 +154,8 @@ elif args.model_pa == 'resnet_CC':
 	model_pa = model_.ResNet_CC(ncoef=args.ncoef_pa, resnet_type=args.resnet_type_pa)
 elif args.model_pa == 'TDNN':
 	model_pa = model_.TDNN(ncoef=args.ncoef_pa)
+elif args.model_pa == 'TDNN_multipool':
+	model_pa = model_.TDNN_multipool(ncoef=args.ncoef_pa)
 elif args.model_pa == 'TDNN_LSTM':
 	model_pa = model_.TDNN_LSTM(ncoef=args.ncoef_pa)
 elif args.model_pa == 'FTDNN':
@@ -193,6 +197,8 @@ elif args.model_mix == 'resnet_CC':
 	model_mix = model_.ResNet_CC(ncoef=args.ncoef_mix, resnet_type=args.resnet_type_mix)
 elif args.model_mix == 'TDNN':
 	model_mix = model_.TDNN(ncoef=args.ncoef_mix)
+elif args.model_mix == 'TDNN_multipool':
+	model_mix = model_.TDNN_multipool(ncoef=args.ncoef_mix)
 elif args.model_mix == 'TDNN_LSTM':
 	model_mix = model_.TDNN_LSTM(ncoef=args.ncoef_mix)
 elif args.model_mix == 'FTDNN':

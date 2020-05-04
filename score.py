@@ -30,7 +30,7 @@ if __name__ == '__main__':
 	parser.add_argument('--trials-path', type=str, default=None, metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
-	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_9', help='Model arch')
+	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_multipool', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_9', help='Model arch')
 	parser.add_argument('--vgg-type', choices=['VGG11', 'VGG13', 'VGG16', 'VGG19'], default='VGG16', help='VGG arch')
 	parser.add_argument('--resnet-type', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101'], default='18', help='Resnet arch')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
@@ -86,6 +86,8 @@ if __name__ == '__main__':
 		model = model_.ResNet_CC(ncoef=args.ncoef, init_coef=args.init_coef, resnet_type=args.resnet_type)
 	elif args.model == 'TDNN':
 		model = model_.TDNN(ncoef=args.ncoef, init_coef=args.init_coef)
+	elif args.model == 'TDNN_multipool':
+		model = model_.TDNN_multipool(ncoef=args.ncoef, init_coef=args.init_coef)
 	elif args.model == 'TDNN_LSTM':
 		model = model_.TDNN_LSTM(ncoef=args.ncoef)
 	elif args.model == 'FTDNN':
