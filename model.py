@@ -1023,35 +1023,35 @@ class TDNN_multipool(nn.Module):
 		self.init_coef=init_coef
 
 		self.model_1 = nn.Sequential( nn.Conv1d(ncoef, 512, 5, padding=2),
-			nn.BatchNorm1d(512),
-			nn.ReLU(inplace=True) )
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
 		self.model_2 = nn.Sequential( nn.Conv1d(512, 512, 5, padding=2),
-			nn.BatchNorm1d(512),
-			nn.ReLU(inplace=True) )
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
 		self.model_3 = nn.Sequential( nn.Conv1d(512, 512, 5, padding=3),
-			nn.BatchNorm1d(512),
-			nn.ReLU(inplace=True) )
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
 		self.model_4 = nn.Sequential( nn.Conv1d(512, 512, 7),
-			nn.BatchNorm1d(512),
-			nn.ReLU(inplace=True) )
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
 		self.model_5 = nn.Sequential( nn.Conv1d(512, 512, 1),
-			nn.BatchNorm1d(512),
-			nn.ReLU(inplace=True) )
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
 
 		self.att_pooling = SelfAttention(1024, mean_only=True)
 
 		self.stats_pooling = StatisticalPooling()
 
 		self.post_pooling_1 = nn.Sequential(nn.Linear(1024, 512),
-			nn.BatchNorm1d(512),
-			nn.ReLU(inplace=True) )
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
 
 		self.post_pooling_2 = nn.Sequential(nn.Linear(512, 512),
-			nn.BatchNorm1d(512),
 			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512),
 			nn.Linear(512, 512),
-			nn.BatchNorm1d(512),
 			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512),
 			nn.Linear(512, nclasses) if nclasses>2 else nn.Linear(512, 1) )
 
 	def forward(self, x):
