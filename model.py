@@ -1038,8 +1038,6 @@ class TDNN_multipool(nn.Module):
 			nn.ReLU(inplace=True),
 			nn.BatchNorm1d(512) )
 
-		self.overall_pooling = StatisticalPooling()
-
 		self.stats_pooling = StatisticalPooling()
 
 		self.post_pooling_1 = nn.Sequential(nn.Linear(2048, 512),
@@ -1077,7 +1075,7 @@ class TDNN_multipool(nn.Module):
 
 		x_pool = torch.cat(x_pool, -1)
 
-		x = self.overall_pooling(x_pool)
+		x = self.stats_pooling(x_pool)
 
 		x = self.post_pooling_1(x)
 		out = self.post_pooling_2(x)
