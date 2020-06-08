@@ -1040,7 +1040,7 @@ class TDNN_multipool(nn.Module):
 
 		self.stats_pooling = StatisticalPooling()
 
-		self.post_pooling_1 = nn.Sequential(nn.Linear(2048, 512),
+		self.post_pooling_1 = nn.Sequential(nn.Linear(5*1024, 512),
 			nn.ReLU(inplace=True),
 			nn.BatchNorm1d(512) )
 
@@ -1059,25 +1059,23 @@ class TDNN_multipool(nn.Module):
 		x = x.squeeze(1)
 
 		x_1 = self.model_1(x)
-		x_pool.append(self.stats_pooling(x_1).unsqueeze(2))
+		x_pool.append(self.stats_pooling(x_1))
 
 		x_2 = self.model_2(x_1)
-		x_pool.append(self.stats_pooling(x_2).unsqueeze(2))
+		x_pool.append(self.stats_pooling(x_2))
 
 		x_3 = self.model_3(x_2)
-		x_pool.append(self.stats_pooling(x_3).unsqueeze(2))
+		x_pool.append(self.stats_pooling(x_3))
 
 		x_4 = self.model_4(x_3)
-		x_pool.append(self.stats_pooling(x_4).unsqueeze(2))
+		x_pool.append(self.stats_pooling(x_4))
 
 		x_5 = self.model_5(x_4)
-		x_pool.append(self.stats_pooling(x_5).unsqueeze(2))
+		x_pool.append(self.stats_pooling(x_5))
 
 		x_pool = torch.cat(x_pool, -1)
 
-		x = self.stats_pooling(x_pool)
-
-		x = self.post_pooling_1(x)
+		x = self.post_pooling_1(x_pool)
 		out = self.post_pooling_2(x)
 
 		return out
