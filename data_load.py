@@ -115,6 +115,8 @@ class Loader(Dataset):
 			data_ = np.tile(data, (1, 1, mul))
 			data_ = data_[:, :, :self.max_nb_frames]
 
+		data_ = torch.from_numpy(data_).float().contiguous()
+
 		if self.augment:
 			data_ = augment_spec(data_)
 
@@ -192,6 +194,7 @@ class Loader_all(Dataset):
 			data_ = np.tile(data, (1, 1, mul))
 			data_ = data_[:, :, :self.max_nb_frames]
 
+		data_ = torch.from_numpy(data_).float().contiguous()
 		data_ = augment_spec(data_)
 
 		return data_
@@ -283,6 +286,8 @@ class Loader_all_valid(Dataset):
 			data_ = np.tile(data, (1, 1, mul))
 			data_ = data_[:, :, :self.max_nb_frames]
 
+		data_ = torch.from_numpy(data_).float().contiguous()
+
 		return data_
 
 class Loader_mcc(Dataset):
@@ -344,6 +349,8 @@ class Loader_mcc(Dataset):
 			mul = int(np.ceil(self.max_nb_frames/data.shape[-1]))
 			data_ = np.tile(data, (1, 1, mul))
 			data_ = data_[:, :, :self.max_nb_frames]
+
+		data_ = torch.from_numpy(data_).float().contiguous()
 
 		return data_
 
