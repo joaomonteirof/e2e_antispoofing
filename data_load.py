@@ -63,7 +63,7 @@ def freq_mask(spec, F=100, num_masks=1, replace_with_zero=False, dim=1):
 
 class Loader(Dataset):
 
-	def __init__(self, hdf5_clean, hdf5_attack, max_nb_frames, n_cycles=1, augment=False):
+	def __init__(self, hdf5_clean, hdf5_attack, max_nb_frames, n_cycles=1, augment=False, label_smoothing=0.0):
 		super(Loader, self).__init__()
 		self.hdf5_1 = hdf5_clean
 		self.hdf5_2 = hdf5_attack
@@ -85,6 +85,9 @@ class Loader(Dataset):
 
 		self.augment = augment
 
+		self.label_smoothing = label_smoothing>0.0
+		self.label_dif = label_smoothing
+
 		print('Number of genuine and spoofing recordings: {}, {}'.format(self.len_1, self.len_2))
 
 	def __getitem__(self, index):
@@ -100,6 +103,10 @@ class Loader(Dataset):
 
 		return utt_clean, utt_attack, torch.zeros(1), torch.ones(1)
 
+		if self.label_smoothing:
+			return utt_clean, utt_attack, torch.rand(1)*self.label_dif, torch.rand(1)*self.label_dif+(1.-self.label_dif)
+		else:
+			return utt_clean, utt_attack, torch.zeros(1), torch.ones(1)
 	def __len__(self):
 		return self.n_cycles*np.maximum(self.len_1, self.len_2)
 

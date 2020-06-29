@@ -22,6 +22,7 @@ parser.add_argument('--lr', type=float, default=0.001, metavar='LR', help='learn
 parser.add_argument('--momentum', type=float, default=0.9, metavar='alpha', help='Alpha (default: 0.9)')
 parser.add_argument('--l2', type=float, default=1e-5, metavar='L2', help='Weight decay coefficient (default: 0.00001)')
 parser.add_argument('--patience', type=int, default=5, metavar='N', help='number of epochs without improvement to wait before reducing lr (default: 5)')
+parser.add_argument('--smoothing', type=float, default=0.1, metavar='l', help='Label smoothing (default: 0.1) - Disable by setting it to 0')
 parser.add_argument('--checkpoint-epoch', type=int, default=None, metavar='N', help='epoch to load for checkpointing. If None, training starts from scratch')
 parser.add_argument('--checkpoint-path', type=str, default=None, metavar='Path', help='Path for checkpointing')
 parser.add_argument('--pretrained-path', type=str, default=None, metavar='Path', help='Path for pre trained model')
@@ -57,11 +58,11 @@ torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
 
-train_dataset = Loader(hdf5_clean = args.train_hdf_path+'train_clean.hdf', hdf5_attack = args.train_hdf_path+'train_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.n_cycles, augment=True)
+train_dataset = Loader(hdf5_clean = args.train_hdf_path+'train_clean.hdf', hdf5_attack = args.train_hdf_path+'train_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.n_cycles, augment=True, label_smoothing=args.smoothing)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 
 if args.valid_hdf_path is not None:
-	valid_dataset = Loader(hdf5_clean = args.valid_hdf_path+'valid_clean.hdf', hdf5_attack = args.valid_hdf_path+'valid_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles, augment=False)
+	valid_dataset = Loader(hdf5_clean = args.valid_hdf_path+'valid_clean.hdf', hdf5_attack = args.valid_hdf_path+'valid_attack.hdf', max_nb_frames = args.n_frames, n_cycles=args.valid_n_cycles, augment=False, label_smoothing=0.0)
 	valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.valid_batch_size, shuffle=False, worker_init_fn=set_np_randomseed)
 else:
 	valid_loader=None
