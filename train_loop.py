@@ -10,7 +10,7 @@ from utils import compute_eer
 
 class TrainLoop(object):
 
-	def __init__(self, model, optimizer, train_loader, valid_loader, patience, checkpoint_path=None, checkpoint_epoch=None, cuda=True, logger=None):
+	def __init__(self, model, optimizer, train_loader, valid_loader, patience, max_gnorm, checkpoint_path=None, checkpoint_epoch=None, cuda=True, logger=None):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -24,6 +24,7 @@ class TrainLoop(object):
 		self.model = model
 		self.optimizer = optimizer
 		self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=0.5, patience=patience, verbose=True, threshold=1e-4, min_lr=1e-7)
+		self.max_gnorm = max_gnorm
 		self.train_loader = train_loader
 		self.valid_loader = valid_loader
 		self.total_iters = 0
@@ -124,6 +125,7 @@ class TrainLoop(object):
 		loss = torch.nn.BCEWithLogitsLoss()(pred, y)
 
 		loss.backward()
+		grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.max_gnorm)
 		self.optimizer.step()
 		return loss.item()
 

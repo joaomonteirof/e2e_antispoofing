@@ -21,6 +21,7 @@ parser.add_argument('--epochs', type=int, default=500, metavar='N', help='number
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR', help='learning rate (default: 0.001)')
 parser.add_argument('--momentum', type=float, default=0.9, metavar='alpha', help='Alpha (default: 0.9)')
 parser.add_argument('--l2', type=float, default=1e-5, metavar='L2', help='Weight decay coefficient (default: 0.00001)')
+parser.add_argument('--max-gnorm', type=float, default=100., metavar='clip', help='Max gradient norm (default: 100.0)')
 parser.add_argument('--patience', type=int, default=5, metavar='N', help='number of epochs without improvement to wait before reducing lr (default: 5)')
 parser.add_argument('--smoothing', type=float, default=0.1, metavar='l', help='Label smoothing (default: 0.1) - Disable by setting it to 0')
 parser.add_argument('--checkpoint-epoch', type=int, default=None, metavar='N', help='epoch to load for checkpointing. If None, training starts from scratch')
@@ -124,14 +125,15 @@ model = model.to(device)
 
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
 
-trainer = TrainLoop(model, optimizer, train_loader, valid_loader, patience=args.patience, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, logger=writer)
+trainer = TrainLoop(model, optimizer, train_loader, valid_loader, patience=args.patience, max_gnorm=args.max_gnorm, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, logger=writer)
 
-print('Cuda Mode: {}'.format(args.cuda))
-print('Device: {}'.format(device))
-print('Selected model: {}'.format(args.model))
-print('Batch size: {}'.format(args.batch_size))
-print('LR: {}'.format(args.lr))
-print('Momentum: {}'.format(args.momentum))
-print('l2: {}'.format(args.l2))
+print('\n')
+print(model)
+print('\n')
+
+args_dict = dict(vars(args))
+for key in args_dict:
+	print('{}: {}'.format(key, args_dict[key]))
+print('\n')
 
 trainer.train(n_epochs=args.epochs, save_every=args.save_every)
