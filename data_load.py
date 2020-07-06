@@ -34,6 +34,8 @@ def freq_mask(spec, F=100, num_masks=1, replace_with_zero=False, dim=1):
 
 	assert dim==1 or dim==2, 'Only 1 or 2 are valid values for dim!'
 
+	F = min(F, spec.size(dim))
+
 	with torch.no_grad():
 
 		cloned = spec.clone()
