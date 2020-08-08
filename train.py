@@ -50,11 +50,6 @@ if args.cuda:
 else:
 	device = torch.device('cpu')
 
-if args.logdir:
-	writer = SummaryWriter(log_dir=args.logdir, comment=args.model, purge_step=True)
-else:
-	writer = None
-
 torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
@@ -124,6 +119,11 @@ if args.pretrained_path is not None:
 model = model.to(device)
 
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.l2)
+
+if args.logdir:
+	writer = SummaryWriter(log_dir=args.logdir, comment=args.model, purge_step=0 if args.checkpoint_epoch is None else int(args.checkpoint_epoch*len(train_loader)))
+else:
+	writer = None
 
 trainer = TrainLoop(model, optimizer, train_loader, valid_loader, patience=args.patience, max_gnorm=args.max_gnorm, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, logger=writer)
 

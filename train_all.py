@@ -66,11 +66,6 @@ if args.cuda:
 else:
 	device = torch.device('cpu')
 
-if args.logdir:
-	writer = SummaryWriter(log_dir=args.logdir, comment=args.model_la+'-_-'+args.model_pa+'-_-'+args.model_mix, purge_step=True if args.checkpoint_epoch is None else False)
-else:
-	writer = None
-
 torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
@@ -250,6 +245,11 @@ model_mix = model_mix.to(device)
 optimizer_la = TransformerOptimizer(optim.Adam(model_la.parameters(), betas=(args.b1, args.b2), weight_decay=args.l2), lr=args.lr_la if args.lr_la>0.0 else args.lr, warmup_steps=args.warmup)
 optimizer_pa = TransformerOptimizer(optim.Adam(model_pa.parameters(), betas=(args.b1, args.b2), weight_decay=args.l2), lr=args.lr_pa if args.lr_pa>0.0 else args.lr, warmup_steps=args.warmup)
 optimizer_mix = TransformerOptimizer(optim.Adam(model_mix.parameters(), betas=(args.b1, args.b2), weight_decay=args.l2), lr=args.lr_mix if args.lr_mix>0.0 else args.lr, warmup_steps=args.warmup)
+
+if args.logdir:
+	writer = SummaryWriter(log_dir=args.logdir, comment=args.model_la+'-_-'+args.model_pa+'-_-'+args.model_mix, purge_step=0 if args.checkpoint_epoch is None else int(args.checkpoint_epoch*len(train_loader)))
+else:
+	writer = None
 
 trainer = TrainLoop(model_la, model_pa, model_mix, optimizer_la, optimizer_pa, optimizer_mix, train_loader, valid_loader, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, logger=writer)
 
