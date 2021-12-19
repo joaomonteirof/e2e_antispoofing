@@ -4,30 +4,25 @@ import glob
 import torch
 import torch.nn.functional as F
 import os
-from kaldi_io import read_mat_scp
+import h5py
 import model as model_
 import scipy.io as sio
 from sklearn import preprocessing
 from utils import compute_eer_labels, get_freer_gpu, read_trials, change_keys
 
+
 def prep_feats(data_):
 
-	#data_ = ( data_ - data_.mean(0) ) / data_.std(0)
+	data_ = np.expand_dims(data_, 0)
+	data_ = torch.from_numpy(data_).float().contiguous()
 
-	features = data_.T
-
-	if features.shape[1]<50:
-		mul = int(np.ceil(50/features.shape[1]))
-		features = np.tile(features, (1, mul))
-		features = features[:, :50]
-
-	return torch.from_numpy(features[np.newaxis, np.newaxis, :, :]).float()
+	return data_
 
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Compute scores')
-	parser.add_argument('--path-to-data', type=str, default='./data/feats.scp', metavar='Path', help='Path to input data')
-	parser.add_argument('--trials-path', type=str, default=None, metavar='Path', help='Path to trials file')
+	parser.add_argument('--path-to-clean-data', type=str, default='./data/clean.hdf', metavar='Path', help='Path to input data')
+	parser.add_argument('--path-to-attack-data', type=str, default='./data/attack.hdf', metavar='Path', help='Path to input data')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
 	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_multipool', 'TDNN_ablation', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_9', help='Model arch')
@@ -106,25 +101,14 @@ if __name__ == '__main__':
 	ckpt = torch.load(args.cp_path, map_location = lambda storage, loc: storage)
 	model.load_state_dict(ckpt['model_state'], strict=True)
 	model.eval()
+	model = model.to(device)
 
 	print('Model loaded')
 
 	print('Loading data')
 
-	data = { k:m for k,m in read_mat_scp(args.path_to_data) }
-
-	if args.trials_path:
-		if args.eval:
-			test_utts = read_trials(args.trials_path, eval_=args.eval)
-		else:
-			test_utts, attack_type_list, label_list = read_trials(args.trials_path, eval_=args.eval)
-			lb = preprocessing.LabelBinarizer()
-			y = torch.Tensor(lb.fit_transform(label_list)).squeeze(-1)
-	else:
-		test_utts = list(data.keys())
-
-	if args.tandem:
-		data = change_keys(data)
+	clean_data = h5py.File(self.path_to_clean_data, 'r')
+	attack_data = h5py.File(self.path_to_attack_data, 'r')
 
 	print('Data loaded')
 
@@ -132,36 +116,38 @@ if __name__ == '__main__':
 
 	score_list = []
 	pred_list = []
-	skipped_utterances = 0
+	label_list = []
 
 	with torch.no_grad():
 
-		for i, utt in enumerate(test_utts):
+		for i in range(len(clean_data)):
 
-			try:
-				feats = prep_feats(data[utt])
-			except KeyError:
-				print('\nSkipping utterance {}. Not found within the data\n'.format(utt))
-				skipped_utterances+=1
-				continue
+			feats = prep_feats(clean_data[i])
 
-			try:
-				if args.cuda:
-					feats = feats.to(device)
-					model = model.to(device)
+			if args.cuda:
+				feats = feats.to(device)
 
-				pred = torch.sigmoid(model.forward(feats)).item()
-				score = 1.-pred
-
-			except:
-				feats = feats.cpu()
-				model = model.cpu()
-
-				pred = torch.sigmoid(model.forward(feats)).item()
-				score = 1.-pred
+			pred = torch.sigmoid(model.forward(feats)).item()
+			score = 1.-pred
 
 			score_list.append(score)
 			pred_list.append(pred)
+			label_list.append(0.0)
+
+		for i in range(len(attack_data)):
+
+			feats = prep_feats(attack_data[i])
+
+			if args.cuda:
+				feats = feats.to(device)
+				model = model.to(device)
+
+			pred = torch.sigmoid(model.forward(feats)).item()
+			score = 1.-pred
+
+			score_list.append(score)
+			pred_list.append(pred)
+			label_list.append(1.0)
 
 	if not args.no_output_file:
 
