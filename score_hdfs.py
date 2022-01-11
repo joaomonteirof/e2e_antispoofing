@@ -25,7 +25,7 @@ if __name__ == '__main__':
 	parser.add_argument('--path-to-attack-data', type=str, default='./data/attack.hdf', metavar='Path', help='Path to input data')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./out.txt', metavar='Path', help='Path to output hdf file')
-	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_multipool', 'TDNN_ablation', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_9', help='Model arch')
+	parser.add_argument('--model', choices=['lstm', 'resnet', 'resnet_pca', 'wideresnet', 'lcnn_9', 'lcnn_29', 'lcnn_9_pca', 'lcnn_29_pca', 'lcnn_9_prodspec', 'lcnn_9_icqspec', 'lcnn_9_CC', 'lcnn_29_CC', 'resnet_CC', 'TDNN', 'TDNN_multipool', 'TDNN_ablation', 'TDNN_cat', 'TDNN_LSTM', 'FTDNN', 'mobilenet', 'densenet', 'VGG'], default='lcnn_9', help='Model arch')
 	parser.add_argument('--vgg-type', choices=['VGG11', 'VGG13', 'VGG16', 'VGG19'], default='VGG16', help='VGG arch')
 	parser.add_argument('--resnet-type', choices=['18', '28', '34', '50', '101', 'se_18', 'se_28', 'se_34', 'se_50', 'se_101', '2net_18', '2net_se_18'], default='18', help='Resnet arch')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
@@ -86,6 +86,8 @@ if __name__ == '__main__':
 		model = model_.TDNN_multipool(ncoef=args.ncoef, init_coef=args.init_coef)
 	elif args.model == 'TDNN_ablation':
 		model = model_.TDNN_ablation(ncoef=args.ncoef, init_coef=args.init_coef)
+	elif args.model == 'TDNN_cat':
+		model = model_.TDNN_cat(ncoef=args.ncoef, init_coef=args.init_coef)
 	elif args.model == 'TDNN_LSTM':
 		model = model_.TDNN_LSTM(ncoef=args.ncoef)
 	elif args.model == 'FTDNN':

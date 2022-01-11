@@ -1224,6 +1224,72 @@ class TDNN_ablation(nn.Module):
 
 		return out
 
+class TDNN_cat(nn.Module):
+
+	def __init__(self, nclasses=-1, ncoef=90, init_coef=0):
+		super().__init__()
+
+		self.ncoef=ncoef
+		self.init_coef=init_coef
+
+		self.model_1 = nn.Sequential( nn.Conv1d(ncoef, 512, 5, padding=2),
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
+		self.model_2 = nn.Sequential( nn.Conv1d(512, 512, 5, padding=2),
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
+		self.model_3 = nn.Sequential( nn.Conv1d(512, 512, 5, padding=3),
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
+		self.model_4 = nn.Sequential( nn.Conv1d(512, 512, 7),
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
+		self.model_5 = nn.Sequential( nn.Conv1d(512, 512, 1),
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
+
+		self.stats_pooling = StatisticalPooling()
+
+		self.post_pooling_1 = nn.Sequential(nn.Linear(2*5*512, 512),
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512) )
+
+		self.post_pooling_2 = nn.Sequential(nn.Linear(512, 512),
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512),
+			nn.Linear(512, 512),
+			nn.ReLU(inplace=True),
+			nn.BatchNorm1d(512),
+			nn.Linear(512, nclasses) if nclasses>2 else nn.Linear(512, 1) )
+
+	def forward(self, x):
+
+		x_pool = []
+
+		x = x.squeeze(1)
+
+		x_1 = self.model_1(x)
+		x_pool.append(self.stats_pooling(x_1))
+
+		x_2 = self.model_2(x_1)
+		x_pool.append(self.stats_pooling(x_2))
+
+		x_3 = self.model_3(x_2)
+		x_pool.append(self.stats_pooling(x_3))
+
+		x_4 = self.model_4(x_3)
+		x_pool.append(self.stats_pooling(x_4))
+
+		x_5 = self.model_5(x_4)
+		x_pool.append(self.stats_pooling(x_5))
+
+		x_pool = torch.cat(x_pool, -1)
+
+		x = self.post_pooling_1(x_pool)
+		out = self.post_pooling_2(x)
+
+		return out
+
 
 class TDNN_LSTM(nn.Module):
 	def __init__(self, nclasses=-1, ncoef=90, init_coef=0):
