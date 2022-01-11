@@ -31,7 +31,6 @@ if __name__ == '__main__':
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	parser.add_argument('--no-output-file', action='store_true', default=False, help='Disables writing scores into out file')
 	parser.add_argument('--no-eer', action='store_true', default=False, help='Disables computation of EER')
-	parser.add_argument('--eval', action='store_true', default=False, help='Enables eval trials reading')
 	parser.add_argument('--tandem', action='store_true', default=False, help='Scoring with tandem features')
 	parser.add_argument('--ncoef', type=int, default=90, metavar='N', help='Number of cepstral coefs (default: 90)')
 	parser.add_argument('--init-coef', type=int, default=0, metavar='N', help='First cepstral coefs (default: 0)')
@@ -107,8 +106,8 @@ if __name__ == '__main__':
 
 	print('Loading data')
 
-	clean_data = h5py.File(self.path_to_clean_data, 'r')
-	attack_data = h5py.File(self.path_to_attack_data, 'r')
+	clean_data = h5py.File(args.path_to_clean_data, 'r')
+	attack_data = h5py.File(args.path_to_attack_data, 'r')
 
 	print('Data loaded')
 
@@ -120,9 +119,9 @@ if __name__ == '__main__':
 
 	with torch.no_grad():
 
-		for i in range(len(clean_data)):
+		for id in clean_data.keys():
 
-			feats = prep_feats(clean_data[i])
+			feats = prep_feats(clean_data[id])
 
 			if args.cuda:
 				feats = feats.to(device)
@@ -132,11 +131,11 @@ if __name__ == '__main__':
 
 			score_list.append(score)
 			pred_list.append(pred)
-			label_list.append(0.0)
+			label_list.append('clean')
 
-		for i in range(len(attack_data)):
+		for id in attack_data.keys():
 
-			feats = prep_feats(attack_data[i])
+			feats = prep_feats(attack_data[id])
 
 			if args.cuda:
 				feats = feats.to(device)
@@ -147,7 +146,7 @@ if __name__ == '__main__':
 
 			score_list.append(score)
 			pred_list.append(pred)
-			label_list.append(1.0)
+			label_list.append('spoof')
 
 	if not args.no_output_file:
 
@@ -162,9 +161,8 @@ if __name__ == '__main__':
 				for i, utt in enumerate(test_utts):
 					f.write("%s" % ' '.join([utt, attack_type_list[i], label_list[i], str(score_list[i])+'\n']))
 
-	if not args.no_eer and not args.eval and args.trials_path:
+	if not args.no_eer:
 		print('EER: {}'.format(compute_eer_labels(label_list, score_list)))
-		print('BCE: {}'.format(torch.nn.BCELoss()(torch.Tensor(pred_list), y)))
 
 	print('All done!!')
 	print('\nTotal skipped trials: {}'.format(skipped_utterances))
